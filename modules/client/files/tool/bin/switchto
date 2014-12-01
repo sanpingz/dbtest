@@ -1,0 +1,236 @@
+#!/bin/ksh
+
+function help
+{
+	print " Usage: switchto <DB name> [n-k]/[n]/[<Node name>...] [-f conf file] \n Example: \n\
+	1. All nodes switch to cassandra \n\
+	    switchto cassandra\n\
+	2. Node01 switchs to Cassandra \n\
+	    switchto cassandra node01\n\
+	3. Node03 and Node05 switch to Cassandra \n\
+	    switchto cassandra node03 node05\n\
+	4. Node01~Node06 switch to MongoDB \n\
+	    switchto cassandra 1-6\n\
+	5. Node01 switch to Cassandra with specified conf file \n\
+	    switchto cassandra node01 -f cassandra.yaml\n\
+		"
+}
+
+DASH_URL="http://135.111.75.228:3000"
+MODE=$1
+CLUSTER_PREFIX="node"
+CLUSTER_SUFFIX=".openstacklocal"
+RANGE_VALUE=""
+REDIS_CONF="/local/puppet/conf/redis/redis.conf"
+MONGODB_CONF="/local/puppet/conf/mongodb/mongod.conf"
+CASSANDRA_CONF="/local/puppet/conf/cassandra/conf/cassandra.yaml"
+
+set -A DBS cassandra redis aerospike
+typeset -i NODE_NUM=20
+set -A PAIR
+set -A OPTS $*
+set -A RANGE
+set -A NODES
+set -A CLUSTERS
+unset OPTS[0]
+
+function if_error
+{
+	ret=$?
+	if [[ $ret -ne 0 ]]; then # check return code passed to function
+		print "$1" # if rc > 0 then print error msg and quit
+		print "---------------------------------------------------"
+		help
+		exit $ret
+	fi
+}
+
+function handle_client {
+	set -A CLIENTS client01 client02 client03 client04 client05 client06 client07 client08
+	typeset -i n=${#CLIENTS[*]}-1
+	for i in {0..$n}; do
+		CLIENTS[i]="${CLIENTS[i]}${CLUSTER_SUFFIX}"
+	done
+	CLIENT_PREFIX="client"
+	if [[ $MODE == $CLIENT_PREFIX ]]; then
+		puppet kick -p 10 ${CLIENTS[*]}
+	    if_error "Puppet push to all clients error"
+		exit 0
+	fi
+}
+
+function gen_range {
+	unset RANGE
+	set -A array $(echo $1|tr '-' ' '|tr -s ' ')
+	typeset -i start=${array[0]} end=${array[1]} 
+	[[ $start -gt 0 ]] && [[ $end -gt 0 ]] && [[ $start -le $NODE_NUM ]] && [[ $end -le $NODE_NUM ]] && [[ $start -le $end ]]
+	if_error "Invalid parameters or out of range, please retype"
+	typeset -i i=$start
+	while [[ $i -le $end ]]; do
+		if [[ $i -le 9 ]]; then
+			RANGE[${#RANGE[*]}]="${CLUSTER_PREFIX}0$i${CLUSTER_SUFFIX}"
+		else
+			RANGE[${#RANGE[*]}]="${CLUSTER_PREFIX}$i${CLUSTER_SUFFIX}"
+		fi
+		i=i+1
+	done
+}
+
+function are_valid_clusters
+{
+	typeset -i counter=0
+	for ee in ${OPTS[*]}; do
+		for e in ${CLUSTERS[*]}; do
+			if [ $e == $ee ]; then
+				counter=counter+1
+			fi
+		done
+	done
+	num=${#OPTS[@]}
+	[ $counter -eq $num ]
+	if_error "Invalid cluster name, please retype"
+}
+
+function is_contained {
+	element=$1
+	set -A array $*
+	set -A array ${array[@]:1}
+	for e in ${array[@]}; do
+		if [[ $e == $element ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+function pair_contained {
+	element=$1
+	typeset -i i=0
+	set -A array
+	for e in $*; do
+		array[i]=$e
+		i=i+1
+	done
+	unset array[0]
+	typeset -i idx=0 tot=$#-2
+	for e in ${array[@]}; do
+		if [[ $e == $element ]]; then
+			if [[ $idx -ne $tot ]]; then
+				PAIR[0]=${idx}
+				PAIR[1]="${array[idx+2]}"
+				return 0
+			elif [[ $idx -eq $tot ]]; then
+				print "Parameter is missed for option $element"
+				exit 1
+			fi
+		fi
+		idx=idx+1
+	done
+	return 1
+}
+
+function git_checkout
+{
+	cd /local/puppet
+	git add .
+	git commit -m"commit: `date +'%Y%m%d %H:%M:%S'`"
+	git checkout $MODE
+	cd -
+}
+
+function find_range_value
+{
+	for op in ${OPTS[@]}; do
+		echo "$op" | grep - > /dev/null
+		if [[ $? -eq 0 ]]; then
+			RANGE_VALUE=$op
+			return 0
+		fi
+	done
+	return 1
+}
+
+function param_handler
+{
+	# for -f conf_file
+	pair_contained -f ${OPTS[@]}
+	ret=$?
+	if [[ $ret -eq 0 ]]; then
+		[[ -f ${PAIR[1]} ]]
+		if_error "Conf file ${PAIR[1]} not exist"
+		if [[ "redis"==$MODE ]]; then
+			cp -f "${PAIR[1]}" ${REDIS_CONF}
+			print "Specified conf file ${REDIS_CONF} will be applied"
+		elif [[ "mongodb"==$MODE ]]; then
+			cp -f "${PAIR[1]}" ${MONGODB_CONF}
+			print "Specified conf file ${MONGODB_CONF} will be applied"
+		elif [[ "cassandra"==$MODE ]]; then
+			cp -f "${PAIR[1]}" ${CASSANDRA_CONF}
+			print "Specified conf file ${CASSANDRA_CONF} will be applied"
+		else
+			print "Unknown error"
+			exit 1
+		fi
+		typeset -i idx=${PAIR[0]}
+		unset OPTS[$idx+1]
+		unset OPTS[$idx+2]
+	fi
+}
+
+function is_digit
+{
+	echo "$1" | egrep '^[0-9]+$' 2>&1 > /dev/null
+	return $?
+}
+
+#### main ####
+
+param_handler
+if_error "Parameters handle error!"
+
+handle_client
+
+is_contained $MODE ${DBS[@]}
+if_error "Invalid DB name!"
+
+#git_checkout > /dev/null
+#if_error "Git checkout $MODE error"
+
+gen_range "1-$NODE_NUM"
+CLUSTERS=${RANGE[@]}
+
+typeset -i args=${#OPTS[@]}
+if [[ $args -eq 0 ]]; then
+	puppet kick -p 10 ${CLUSTERS[*]}
+	if_error "Puppet push to all nodes error, check detail at: $DASH_URL"
+	print "All nodes switched to $MODE, but maybe needs several seconds to take effect,\ncheck status at: $DASH_URL"
+elif [[ $args -ge 1 ]]; then
+	find_range_value
+	if [[ $? -eq 0 ]]; then
+		gen_range $RANGE_VALUE
+		NODES=${RANGE[@]}
+	elif is_digit ${OPTS[1]}; then
+		typeset -i idx=${OPTS[1]}
+		[[ $idx -le $NODE_NUM ]]
+		if_error "Node index out of range"
+
+		if [[ $idx -le 9 ]]; then
+			NODES="${CLUSTER_PREFIX}0$idx${CLUSTER_SUFFIX}"
+		else
+			NODES="${CLUSTER_PREFIX}$idx${CLUSTER_SUFFIX}"
+		fi
+	else
+		are_valid_clusters
+		NODES=${OPTS[@]}
+	fi
+	[[ ${#NODES[*]} -ne 0 ]]
+	if_error "NODES can't be empty"
+
+	puppet kick -p 10 $NODES
+	if_error "Puppet push to $NODES error, check detail at: $DASH_URL"
+
+	print "Switched to $MODE, but maybe needs several seconds to take effect,\ncheck status at: $DASH_URL"
+	##print "$NODES switched to $MODE, but maybe needs several seconds to take effect,\ncheck status at: $DASH_URL"
+else
+	print "Unknown error!"
+fi

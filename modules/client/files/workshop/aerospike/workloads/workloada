@@ -1,0 +1,54 @@
+## Yahoo! Cloud System Benchmark
+
+aerospike.generationpolicy=GT
+port=3000
+ns=state
+set=assign
+fieldcount=5
+fieldlength=256
+fieldnameprefix=field
+
+threadcount=50
+#target=9444
+target=1548
+
+recordcount=5000000
+operationcount=50000000
+maxexecutiontime=600
+
+readallfields=true
+writeallfields=true
+
+readproportion=0.39
+updateproportion=0.39
+scanproportion=0
+insertproportion=0
+deleteproportion=0.22
+readmodifywriteproportion=0
+
+#readproportion=0
+#updateproportion=0.64
+#scanproportion=0
+#insertproportion=0
+#deleteproportion=0.36
+#readmodifywriteproportion=0
+
+#cassandra.readconsistencylevel=QUORUM
+#cassandra.writeconsistencylevel=QUORUM
+#cassandra.scanconsistencylevel=QUORUM
+#cassandra.deleteconsistencylevel=QUORUM
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+##  uniform, zipfian or latest
+requestdistribution=zipfian
+## Default: histogram. Options: histogram, timeseries
+measurementtype=histogram
+## Interval for reporting in ms
+timeseries.granularity=1000
+## 5 sec limit before reconnection
+reconnectiontime=5000
+exportmeasurementsinterval=10000
+insertorder=hashed
+
+#maxscanlength=1000
+#scanlengthdistribution=uniform

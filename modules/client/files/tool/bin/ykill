@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ps -ef|grep "python /usr/local/ycsb/bin/ycsb"|grep -v grep|cut -c 9-15|xargs kill -9
+ps -ef|grep "java -cp /usr/local/ycsb/core/lib/core-0.1.4.jar"|grep -v grep|cut -c 9-15|xargs kill -9

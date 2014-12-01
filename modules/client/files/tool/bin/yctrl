@@ -1,0 +1,23 @@
+#!/bin/bash
+
+[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+action=$1
+P2=$2
+DB=${DB:-"cassandra"}
+LOC=/local/puppet/status/$DB
+NODES=${P2:-$NODES}
+host=${host:-node01}
+
+case "$action" in
+	start|stop|restart|cleanup|refresh)
+		[ "X$action" != "Xrefresh" ] && echo `date` > $LOC/$action
+		[ "X$action" = "Xcleanup" ] && /local/tool/bin/yhint ${HOSTS}
+		/local/tool/bin/switchto ${DB} ${NODES}
+		;;
+	status)
+		/usr/bin/nodetool -h ${host} status $P2
+		;;
+	*)
+		echo "Usage: `basename $0` start|stop|status|restart|cleanup|refresh"
+		exit 1
+esac

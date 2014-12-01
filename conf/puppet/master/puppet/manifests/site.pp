@@ -1,1 +1,1 @@
-/local/puppet/site.pp
+../../../../../site.pp

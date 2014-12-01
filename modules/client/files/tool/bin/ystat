@@ -1,0 +1,61 @@
+#!/bin/bash
+
+[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+
+ROOT=${ROOT:-/local/workshop}
+
+CF=${CF_NUM:-5}
+KS=${KS:-"state"}
+CF_PREFIX=${CF_PREFIX:-"table"}
+NODE_PREFIX=${NODE_PREFIX:-"node"}
+NODE_NUM=${NODE_NUM:-20}
+
+host=${host:-"node01"}
+sub=${SUB:-"sub"}
+DD=$ROOT/results/${sub}/nodetool
+
+mark=$1
+tb=$2
+
+[ -n "${mark}" ] && mark="${mark}."
+curtime=`date "+%m%d%H%M%S"`
+out="${curtime}.out"
+
+tb=${tb:-0}
+
+[ ! -d ${DD} ] && mkdir -p ${DD}
+function record {
+	idx=$1
+	node=${host}
+	dd=${DD}
+	nodetool -h ${node} status > ${dd}/${mark}status.${out}
+	nodetool -h ${node} cfstats ${KS} > ${dd}/${mark}cfstats.${KS}.${out}
+	nodetool -h ${node} describecluster > ${dd}/${mark}describecluster.${out}
+
+	for (( i=1; i<$[NODE_NUM+1]; i++ )); do
+		_name=""
+		if [ ${i} -lt 10 ]; then
+			_name=${NODE_PREFIX}0${i}
+		elif [ ${i} -lt 100 ]; then
+			_name=${NODE_PREFIX}${i}
+		fi
+		echo "${_name}" >> ${dd}/${mark}compactionstats.${out}
+		echo "${_name}" >> ${dd}/${mark}info.${out}
+		nodetool -h ${_name} compactionstats >> ${dd}/${mark}compactionstats.${out}
+		nodetool -h ${_name} info >> ${dd}/${mark}info.${out}
+		echo "" >> ${dd}/${mark}compactionstats.${out}
+		echo "" >> ${dd}/${mark}info.${out}
+	done
+
+	if [ ${idx} -eq 0 ]; then
+		for (( i=1; i<$[CF+1]; i++ )); do
+			echo "${KS}.${CF_PREFIX}${i}" >> ${dd}/${mark}cfhistograms.${KS}.${out}
+			nodetool -h ${node} cfhistograms ${KS} ${CF_PREFIX}${i} >> ${dd}/${mark}cfhistograms.${node}.${KS}.${out}
+			echo "" >> ${dd}/${mark}cfhistograms.${KS}.${out}
+		done
+	elif [ $idx -gt 0 ] && [ $idx -le ${CF} ]; then
+		nodetool -h ${node} cfhistograms ${KS} ${CF_PREFIX}${idx} > ${dd}/${mark}cfhistograms.${KS}.${CF_PREFIX}${idx}.${out}
+	fi
+}
+
+record $tb

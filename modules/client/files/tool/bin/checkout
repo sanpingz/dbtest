@@ -1,0 +1,36 @@
+#!/bin/ksh
+
+function help
+{
+	print "Usage: checkout <DB name> "
+}
+
+MODE=$1
+
+function if_error
+{
+	if [[ $? -ne 0 ]]; then # check return code passed to function
+		help
+		print "$1" # if rc > 0 then print error msg and quit
+		exit $?
+	fi
+}
+
+function git_checkout
+{
+	cd /local/puppet
+	git add .
+	git commit -m"commit: `date +'%Y%m%d %H:%M:%S'`"
+	git checkout $MODE
+	cd -
+}
+
+[[ -n $1 ]]
+if_error "Empty DB name, please type redis/cassandra/mongodb"
+
+[ $MODE == "redis" ] || [ $MODE == "mongodb" ] || [ $MODE == "cassandra" ]
+if_error "Invalid DB name, please type redis/cassandra/mongodb"
+
+git_checkout 1> /dev/null
+if_error "git checkout $MODE error"
+

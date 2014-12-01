@@ -1,0 +1,87 @@
+#
+# This is an example YAML profile for cassandra-stress
+#
+# insert data
+# cassandra-stress user profile=/home/jake/stress1.yaml ops(insert=1)
+#
+# read, using query simple1:
+# cassandra-stress profile=/home/jake/stress1.yaml ops(simple1=1)
+#
+# mixed workload (90/10)
+# cassandra-stress user profile=/home/jake/stress1.yaml ops(insert=1,simple1=9)
+
+
+#
+# Keyspace info
+#
+keyspace: state
+
+#
+# The CQL for creating a keyspace (optional if it already exists)
+#
+keyspace_definition: |
+  CREATE KEYSPACE state WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
+
+#
+# Table info
+#
+table: reg
+
+#
+# The CQL for creating a table you wish to stress (optional if it already exists)
+#
+table_definition: |
+  CREATE TABLE reg (
+        skey blob,
+        value blob,
+        PRIMARY KEY(skey)
+  ) WITH COMPACT STORAGE 
+    AND compaction = { 'class':'SizeTieredCompactionStrategy' }
+    AND comment='Registration data'
+
+#
+# Optional meta information on the generated columns in the above table
+# The min and max only apply to text and blob types
+# The distribution field represents the total unique population
+# distribution of that column across rows.  Supported types are
+# 
+#      EXP(min..max)                        An exponential distribution over the range [min..max]
+#      EXTREME(min..max,shape)              An extreme value (Weibull) distribution over the range [min..max]
+#      GAUSSIAN(min..max,stdvrng)           A gaussian/normal distribution, where mean=(min+max)/2, and stdev is (mean-min)/stdvrng
+#      GAUSSIAN(min..max,mean,stdev)        A gaussian/normal distribution, with explicitly defined mean and stdev
+#      UNIFORM(min..max)                    A uniform distribution over the range [min, max]
+#      FIXED(val)                           A fixed distribution, always returning the same value
+#      Aliases: extr, gauss, normal, norm, weibull
+#
+#      If preceded by ~, the distribution is inverted
+#
+# Defaults for all columns are size: uniform(4..8), population: uniform(1..100B), cluster: fixed(1)
+#
+columnspec:
+  - name: skey
+    size: fixed(64)
+    population: uniform(1..5M)     # the range of unique values to select for the field (default is 100Billion)
+  - name: value
+    size: fixed(32000)
+    population: uniform(1..5M)
+
+insert:
+  partitions: fixed(1)            # number of unique partitions to update in a single operation
+                                  # if perbatch < 1, multiple batches will be used but all partitions will
+                                  # occur in all batches (unless already finished); only the row counts will vary
+##pervisit: uniform(1..10)/10     # ratio of rows each partition should update in a single visit to the partition,
+  pervisit: fixed(1)/1000     # ratio of rows each partition should update in a single visit to the partition,
+                                  # as a proportion of the total possible for the partition
+##perbatch: ~exp(1..3)/4          # number of rows each partition should update in a single batch statement,
+  perbatch: fixed(1)/1            # number of rows each partition should update in a single batch statement,
+                                  # as a proportion of the proportion we are inserting this visit
+                                  # (i.e. compounds with (and capped by) pervisit)
+  batchtype: UNLOGGED             # type of batch to use
+
+#
+# A list of queries you wish to run against the schema
+#
+queries:
+   read: select * from reg where skey = ? LIMIT 1
+   delete: delete from reg where skey = ?
+   # range1: select * from typestest where name = ? and choice = ? and date >= ? LIMIT 100

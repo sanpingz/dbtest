@@ -1,0 +1,30 @@
+#!/bin/bash
+
+[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+NODE_PREFIX=${NODE_PREFIX:-"node"}
+NODE_NUM=${NODE_NUM:-20}
+HOSTS=${HOSTS:-"node01,node02,node03"}
+
+function truncate {
+	idx=$1
+	for (( i=1; i<$[NODE_NUM+1]; i++ )); do
+		_name=""
+		if [ ${i} -lt 10 ]; then
+			_name=${NODE_PREFIX}0${i}
+		elif [ ${i} -lt 100 ]; then
+			_name=${NODE_PREFIX}${i}
+		fi
+		nodetool -h ${_name} truncatehints
+	done
+}
+
+function truncateByHosts {
+
+	arr=(${HOSTS//,/ })
+
+	for var in "${arr[@]}"; do
+		nodetool -h ${var} truncatehints
+	done
+}
+
+truncateByHosts

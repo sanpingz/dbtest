@@ -1,0 +1,55 @@
+# Yahoo! Cloud System Benchmark
+# Coreload: The base of other workloads, other workloads should extend it.
+#                        
+#   Read/update ratio: 50/50
+#   Default data size: 512 B records (2 fields, 256 bytes each, plus key)
+#   Request distribution: zipfian
+#   Target n: Target ops/sec, default: 0 (unthrottled)
+
+table=state
+##cassandra.columnfamily=table
+fieldcount=2
+fieldlength=256
+
+threadcount=10
+##target=0
+maxexecutiontime=300
+
+recordcount=5000000
+operationcount=1000000000
+workload=com.yahoo.ycsb.workloads.ALUWorkload
+
+readallfields=true
+writeallfields=true
+
+cassandra.readconsistencylevel=QUORUM
+cassandra.writeconsistencylevel=QUORUM
+cassandra.scanconsistencylevel=QUORUM
+cassandra.deleteconsistencylevel=QUORUM
+
+readproportion=0.5
+updateproportion=0.5
+scanproportion=0
+insertproportion=0
+deleteproportion=0
+readmodifywriteproportion=0
+
+##  uniform, zipfian or latest
+requestdistribution=zipfian
+
+maxscanlength=1000
+scanlengthdistribution=uniform
+
+## Default: histogram. Options: histogram, timeseries, aluhistogram
+measurementtype=histogram
+## Granularity for time series; measurements will be averaged in chunks of this granularity. Units are milliseconds
+timeseries.granularity=1000
+
+## The order to insert records. Options: "ordered" or "hashed"
+insertorder=hashed
+
+#### Hard code
+## Percentage data items that constitute the hot set
+hotspotdatafraction=0.2
+## Percentage operations that access the hot set
+hotspotopnfraction=0.8

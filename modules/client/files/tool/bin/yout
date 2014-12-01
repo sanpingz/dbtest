@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import re
+
+FL = 0.032
+RC = 300000
+WP = 0.53
+RP = 0.46
+DP = 0.01
+NODES = 3
+RF = 3
+
+delta = FL*RF/NODES/1000.0
+BASE = RC*delta
+
+fn = len(sys.argv)>1 and sys.argv[1]
+if not os.path.isfile(fn): exit(1)
+
+if __name__ == '__main__':
+	with open(fn) as fin:
+		while True:
+			line = fin.readline()
+			if not line:
+				break
+			arr = line.split(';')
+			if len(arr) < 3:
+				continue
+			else:
+				to = re.findall(r' \d+ ', arr[0])
+				tps = re.findall(r'[\d.]+', arr[1])
+				ltc = re.findall(r'[\d.]+', arr[2])
+				if len(to)>1 and tps and len(ltc)>2:
+					#to[1] = str(round(int(to[1])*(WP-DP)*delta + BASE, 2))
+					ltc = map(lambda x: str(round(float(x)/1000, 2)), ltc)
+					print '\t'.join(to+tps+ltc)
+
+
+

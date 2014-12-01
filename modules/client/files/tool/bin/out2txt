@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+
+"""Desc: analysis tool for ycsb output
+Usage: out2txt <ycsb output file>
+Input: ycsb output file name
+Output: to stdout
+"""
+__author__ = 'sanpingz (sanping.zhang@alcatel-lucent.com)'
+
+import sys
+import re
+import os
+
+# for display
+OVERALL = [r'RunTime(ms)', r'TPS(ops/sec)']
+BENCHMARK = ['OPS', 'AvgLTC(ms)', 'MinLTC(ms)', 'MaxLTC(ms)', '95%LTC', '99%LTC', '99.99%LTC', '99.999%LTC', 'Success']
+OPERATION = ['U', 'I', 'R', 'S', 'D', 'RMW']
+# for match
+OVER = [r'RunTime\(ms\)', r'Throughput\(ops/sec\)']
+BENCH = [r'Operations', r'AverageLatency\(ms\)', r'MinLatency\(ms\)', r'MaxLatency\(ms\)', r'95thPercentileLatency', r'99thPercentileLatency', r'99\.99thPercentileLatency', r'99\.999thPercentileLatency', r'Return']
+OPER = [r'UPDATE', r'INSERT', r'READ', r'SCAN', r'DELETE', r'READ-MODIFY-WRITE']
+
+def get_header(oper=OPERATION, over=OVERALL, bench=BENCHMARK):
+	header = over
+	for op in oper:
+		for bm in bench:
+			header.append('%s/%s' % (op, bm))
+	return header
+
+def get_index(key, line):
+	if key in OVER:
+		return OVER.index(key)
+	else:
+		oper = re.findall(r'[\w-]+', line)[0]
+		if oper in OPER:
+			loc = OPER.index(oper)*len(BENCH)
+			return BENCH.index(key) + loc + 2
+		else:
+			return None
+
+def get_value(key, line):
+	return line.split(',')[-1].strip()
+
+def get_pairs(line):
+	for h in BENCH + OVER:
+		if re.match(r'\[[\w-]+\], %s' % h, line):
+			idx = get_index(h, line)
+			value = get_value(h, line) if idx!=None else None
+			return idx, value
+	return None, None
+
+if __name__ == '__main__':
+	if len(sys.argv) < 2:
+		print __doc__
+		exit(1)
+	fn = sys.argv[1]
+	if not os.path.isfile(fn):
+		print "%s not exist, please reenter" % fn
+		exit(1)
+	not_care = re.compile(r'\[[\w-]+\], \d+,')
+	header_len = len(OVERALL) + len(BENCHMARK)*len(OPERATION)
+	ltc_unit = ''
+	with open(fn) as f:
+		table = []
+		row = None
+		flag = False
+		new_divide = False
+		count = 0
+		while True:
+			line = f.readline()
+			if not line:
+				break
+			count = count + 1
+			if not ltc_unit and count <= 12 and re.match(r'\[[\w-]+\], 95thPercentileLatency', line):
+				_fa = re.findall(r'\(\w+\)', line)
+				ltc_unit =  _fa[0] if _fa else ''
+			if re.match(r'Command line:', line):
+				new_divide = True
+				row = ["" for i in range(header_len)]
+			if not_care.match(line):
+				continue
+			else:
+				idx, value = get_pairs(line)
+				if idx != None:
+					row[idx] = value
+			if re.match(r'(java -cp)|(\[CLEANUP\])', line) and new_divide:
+				table.append(row)
+				new_divide = False
+				flag = True
+
+		if flag:
+			header = get_header(bench=map(lambda x: x+ltc_unit if re.search(r'%', x) else x, BENCHMARK))
+			for tb in table:
+				print('\t'.join([h for h,t in zip(header, tb) if t ]))
+				print('\t'.join([t for t in tb if t ]))
+				#print('\t'.join(['%.2f' % float(t) for t in tb if t !='' ]))
+				print
+

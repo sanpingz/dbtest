@@ -1,0 +1,15 @@
+##HOSTS=node01,node02,node03
+HOSTS=node01,node02,node03,node04,node05,node06,node07,node08,node09,node10,node11,node12,node13,node14,node15,node16,node17,node18,node19,node20
+NODES=1-20
+SUB=2.10
+NODE_NUM=20
+CAP=5M
+DB=cassandra
+ROOT=/local/workshop
+NODE_PREFIX="node"
+CF_NUM=5
+KS="state"
+CF_PREFIX="table"
+host="node01"
+PUPPET_HOME=/local/puppet
+TOOL_HOME=/local/tool

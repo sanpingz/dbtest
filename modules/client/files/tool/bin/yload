@@ -1,0 +1,85 @@
+#!/bin/bash
+
+[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+
+DB=${YDB:-cassandra}
+CF_NUM=${CF_NUM:-5}
+KS=${KS:-"state"}
+CF_PREFIX=${CF_PREFIX:-"table"}
+NODE_PREFIX=${NODE_PREFIX:-"node"}
+ROOT=${ROOT:-/local/workshop}
+
+sub=${SUB:-"sub"}
+cap=${CAP:-"5M"}
+hosts=${HOSTS:-"node01,node02,node03"}
+
+action=$1
+mark=$2
+ops=$3
+tb=$4
+
+maxexecutiontime=600
+operationcount=1000000000
+
+[ -d $ROOT/results/${sub} ] && mkdir -p $ROOT/results/${sub}
+for (( i=1; i<$[CF_NUM+1]; i++ )); do [ ! -d $ROOT/results/${sub}/${CF_PREFIX}${i} ] && mkdir -p $ROOT/results/${sub}/${CF_PREFIX}${i}; done
+
+[ ! -d $ROOT/run ] && mkdir -p $ROOT/run
+rm -rf $ROOT/run/Done.*
+
+[ -n "${ops}" ] && ops=" ${ops}"
+if [ "${action}" = "load" ]; then
+	ops="-p maxexecutiontime=36000 -p target=0${ops}"
+elif [ "${action}" = "run" ]; then
+	ops="-p maxexecutiontime=${maxexecutiontime} -p operationcount=${operationcount}${ops}"
+else
+	echo "unknown action=${action}"
+	exit 1
+fi
+
+ops="-p hosts=${hosts} ${ops} -s"
+
+[ -n "${mark}" ] && mark="${mark}."
+curtime=`date "+%m%d%H%M%S"`
+out="${mark}${action}.${curtime}.out"
+
+tb=${tb:-0}
+declare -a abc=([1]="a" [2]="b" [3]="c" [4]="d" [5]="e")
+
+function workload {
+	idx=$1
+	ycsb ${action} ${DB} -P $ROOT/workloads/coreload -P $ROOT/workloads/workload${abc[idx]} -P $ROOT/workloads/cap/${cap}.${idx} ${ops} > $ROOT/results/${sub}/${CF_PREFIX}${idx}/${out} && touch $ROOT/run/Done.${idx} &
+}
+
+function run {
+	func=$1
+	idx=$2
+	if [ ${idx} -eq 0 ]; then
+		for (( i=1; i<$[CF_NUM+1]; i++ )); do
+			${func} ${i}
+		done
+	elif [ ${idx} -gt 0 ] && [ ${idx} -le ${CF_NUM} ]; then
+		${func} ${idx}
+	fi
+}
+
+function record {
+	idx=$1
+	nidx="01"
+	node=${NODE_PREFIX}${nidx}
+	dd=$ROOT/results/${sub}
+	nodetool -h ${node} status > ${dd}/${out}.status.${node}
+	nodetool -h ${node} cfstats ${KS} > ${dd}/${out}.cfstats.${node}.${KS}
+	nodetool -h ${node} describecluster > ${dd}/${out}.describecluster.${node}
+
+	if [ ${idx} -eq 0 ]; then
+		for (( i=1; i<$[CF_NUM+1]; i++ )); do
+			nodetool -h ${node} cfhistograms ${KS} ${CF_PREFIX}${i} > ${dd}/${out}.cfhistograms.${node}.${KS}.${CF_PREFIX}${i}
+		done
+	elif [ $idx -gt 0 ] && [ $idx -le ${CF_NUM} ]; then
+		nodetool -h ${node} cfhistograms ${KS} ${CF_PREFIX}${idx} > ${dd}/${out}.cfhistograms.${node}.${KS}.${CF_PREFIX}${idx}
+	fi
+}
+
+run workload $tb
+

@@ -1,0 +1,45 @@
+## Yahoo! Cloud System Benchmark
+
+port=3000
+ns=state
+set=puid
+fieldcount=1
+fieldlength=256
+fieldnameprefix=field
+
+threadcount=50
+target=347
+
+recordcount=10000000
+operationcount=500000000
+maxexecutiontime=600
+
+readallfields=true
+writeallfields=true
+
+readproportion=0.20
+updateproportion=0.40
+scanproportion=0
+insertproportion=0
+deleteproportion=0.20
+readmodifywriteproportion=0
+
+cassandra.readconsistencylevel=QUORUM
+cassandra.writeconsistencylevel=QUORUM
+cassandra.scanconsistencylevel=QUORUM
+cassandra.deleteconsistencylevel=QUORUM
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+##  uniform, zipfian or latest
+requestdistribution=zipfian
+## Default: histogram. Options: histogram, timeseries
+measurementtype=histogram
+## Interval for reporting in ms
+timeseries.granularity=1000
+## 5 sec limit before reconnection
+reconnectiontime=5000
+exportmeasurementsinterval=10000
+insertorder=hashed
+
+#maxscanlength=1000
+#scanlengthdistribution=uniform

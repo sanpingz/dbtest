@@ -1,0 +1,114 @@
+#! /bin/sh
+#
+# chkconfig: - 55 45
+# description:	The cassandra daemon is a NoSQL service.
+# processname: cassandra
+# config: 
+# pidfile: /var/run/cassandra/cassandra.pid
+
+# Standard LSB functions
+#. /lib/lsb/init-functions
+
+# Source function library.
+. /etc/init.d/functions
+
+NAME=cassandra
+CASSANDRA_HOME=/local/apps/$NAME
+CASSANDRA_CONF=/local/conf/$NAME
+CASSANDRA_LOGS=/local/logs/$NAME 
+CASSANDRA_DATA=/local/data/$NAME
+CASSANDRA_RUN=/var/run/$NAME
+CASSANDRA_LOCK=/var/lock/subsys
+##SUCCESS_INFO="Startup completed! Now serving reads"
+SUCCESS_INFO="state jump to normal"
+
+export CASSANDRA_HOME CASSANDRA_CONF
+
+USER=root
+OPTIONS=""
+
+[ ! -d $CASSANDRA_LOGS ] && mkdir -p $CASSANDRA_LOGS
+[ ! -d $CASSANDRA_RUN ] && mkdir -p $CASSANDRA_RUN
+[ ! -d $CASSANDRA_LOCK ] && mkdir -p $CASSANDRA_LOCK
+
+# JDK env
+. /etc/profile
+
+RETVAL=0
+prog=$CASSANDRA_HOME/bin/cassandra
+logfile=$CASSANDRA_LOGS/setup.log
+pidfile=${PIDFILE-/var/run/cassandra/cassandra.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/cassandra}
+
+setup_check () {
+	MAX_TIME=45
+	STEP=3
+	counter=0
+	until [[ -n `grep "$SUCCESS_INFO" ${logfile}` ]]; do
+		sleep $STEP
+		(( counter=counter+STEP ))
+		if [[ $counter -ge $MAX_TIME ]]; then
+			return 1	
+		fi
+	done
+}
+
+start () {
+	echo -n $"Starting $NAME: "
+	# Ensure that /var/run/cassandra has proper permissions
+	if [ "`stat -c %U $CASSANDRA_RUN`" != "$USER" ]; then
+		chown $USER $CASSANDRA_RUN
+	fi
+
+	daemon --pidfile ${pidfile} ${prog} -p ${pidfile} $OPTIONS 2>&1 > ${logfile}
+	setup_check
+	RETVAL=$?
+	if [ $RETVAL -eq 0 ]; then
+		echo_success
+	else
+		echo_failure
+	fi
+	echo
+	[ $RETVAL -eq 0 ] && touch ${lockfile}
+}
+stop () {
+	echo -n $"Stopping $NAME: "
+	killproc -p ${pidfile} ${prog}
+	RETVAL=$?
+	echo
+	if [ $RETVAL -eq 0 ] ; then
+		rm -f ${lockfile} ${pidfile}
+	fi
+}
+
+restart () {
+        stop
+        start
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status -p ${pidfile} ${prog}
+	RETVAL=$?
+	;;
+  restart|reload|force-reload)
+	restart
+	;;
+  condrestart|try-restart)
+	[ -f ${lockfile} ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|reload|force-reload|condrestart|try-restart}"
+	RETVAL=2
+        ;;
+esac
+
+exit $RETVAL

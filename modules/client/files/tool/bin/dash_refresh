@@ -1,0 +1,9 @@
+#!/bin/bash
+ps -ef|grep "ruby /usr/share/puppet-dashboard/script/server"|grep -v grep|awk '{print $2}'|xargs kill -9
+/usr/bin/ruby /usr/share/puppet-dashboard/script/server -e production &
+sleep 3
+cd /usr/share/puppet-dashboard; rake RAILS_ENV=production reports:import
+env RAILS_ENV=production /usr/share/puppet-dashboard/script/delayed_job -p dashboard -n 4 -m stop
+sleep 3
+env RAILS_ENV=production /usr/share/puppet-dashboard/script/delayed_job -p dashboard -n 4 -m start
+cd -

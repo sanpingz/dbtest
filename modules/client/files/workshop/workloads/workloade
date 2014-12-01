@@ -1,0 +1,15 @@
+cassandra.columnfamily=table5
+fieldcount=1
+fieldlength=256
+
+threadcount=50
+target=139
+
+recordcount=5000000
+operationcount=5000000
+
+readproportion=0
+updateproportion=0.50
+scanproportion=0
+insertproportion=0
+deleteproportion=0.50

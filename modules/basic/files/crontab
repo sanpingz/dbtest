@@ -1,0 +1,53 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/
+
+# For details see man 4 crontabs
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+hwclock - query and set the hardware clock (RTC)
+
+Usage: hwclock [function] [options...]
+
+Functions:
+  -h | --help         show this help
+  -r | --show         read hardware clock and print result
+       --set          set the rtc to the time given with --date
+  -s | --hctosys      set the system time from the hardware clock
+  -w | --systohc      set the hardware clock to the current system time
+       --systz        set the system time based on the current timezone
+       --adjust       adjust the rtc to account for systematic drift since
+                      the clock was last set or adjusted
+  -c | --compare      periodically compare the system clock with the CMOS clock
+       --getepoch     print out the kernel's hardware clock epoch value
+       --setepoch     set the kernel's hardware clock epoch value to the 
+                      value given with --epoch
+  -v | --version      print out the version of hwclock to stdout
+
+Options: 
+  -u | --utc          the hardware clock is kept in UTC
+       --localtime    the hardware clock is kept in local time
+  -f | --rtc=path     special /dev/... file to use instead of default
+       --directisa    access the ISA bus directly instead of /dev/rtc
+       --badyear      ignore rtc's year because the bios is broken
+       --date         specifies the time to which to set the hardware clock
+       --epoch=year   specifies the year which is the beginning of the 
+                      hardware clock's epoch value
+       --noadjfile    do not access /etc/adjtime. Requires the use of
+                      either --utc or --localtime
+       --adjfile=path specifies the path to the adjust file (default is
+                      /etc/adjtime)
+       --test         do everything except actually updating the hardware
+                      clock or anything else
+  -D | --debug        debug mode
+
+*/10 * * * * root /usr/sbin/ntpdate db-oam;/sbin/hwclock -w
