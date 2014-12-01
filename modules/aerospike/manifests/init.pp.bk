@@ -1,0 +1,143 @@
+class aerospike {
+	case $operatingsystem {
+		centos, redhat: {
+			$service = 'aerospike'
+			$zip_file = 'aerospike.tgz'
+			$conf_home = '/local/conf'
+			$apps_home = '/local/apps'
+			$data_home = '/local/data'
+			$dist_home = '/local/dist'
+			$logs_home = '/local/logs'
+			$tool_home = '/local/tool'
+			$files_home = "puppet:///modules/$service"
+			$extra_home = 'puppet:///extra_files'
+		}
+	}
+	file { "/etc/init.d/$service":
+		mode => 755,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$files_home/$service"
+	}
+	file { "$data_home/$service":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => directory,
+	}
+	file { "$apps_home/$service":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => directory,
+	}
+	file { "$logs_home/$service":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => directory,
+	}
+	file { "$conf_home/$service":
+		mode => 755,
+		owner => root,
+		group => root,
+		source => "$extra_home/conf/$service",
+		purge => "true",
+		recurse => "true",
+	}
+#	file { "$zip_file":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		path => "$dist_home/${zip_file}",
+#		ensure => file,
+#		source => "$extra_home/files/${zip_file}",
+#		notify => Exec["reinstall_$service"],
+#	}
+	file { "/tmp/$service":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => directory,
+	}
+	file { "/tmp/$service/restart":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$extra_home/status/$service/restart",
+		notify => Exec["restart_$service"],
+	}
+	file { "/tmp/$service/start":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$extra_home/status/$service/start",
+		notify => Exec["start_$service"],
+	}
+	file { "/tmp/$service/stop":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$extra_home/status/$service/stop",
+		notify => Exec["stop_$service"],
+	}
+	file { "/tmp/$service/cleanup":
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$extra_home/status/$service/cleanup",
+	}
+	exec { "start_$service":
+		path => '/usr/bin:/bin:/sbin',
+		command => "service $service start",
+		onlyif => "test -f /etc/init.d/$service",
+		refreshonly => true,
+	}
+	exec { "stop_$service":
+		path => '/usr/bin:/bin:/sbin',
+		command => "service $service stop",
+		onlyif => "test -f /etc/init.d/$service",
+		refreshonly => true,
+	}
+	exec { "restart_$service":
+		path => '/usr/bin:/bin:/sbin',
+		command => "service $service stop",
+		onlyif => "test -f /etc/init.d/$service",
+		refreshonly => true,
+	}
+	exec { "cleanup_$service":
+		cwd => "$data_home/$service",
+		path => '/usr/bin:/bin',
+		command => "rm -rf $data_home/$service/",
+		onlyif => "test -d $data_home/$service",
+		refreshonly => true,
+	}
+	exec { "reinstall_$service":
+		cwd => "$apps_home",
+		path => '/usr/bin:/bin',
+		command => "rm -rf $apps_home/$service && \
+		rm -rf /tmp/*$service* && \
+		tar -zxvf $dist_home/${zip_file} -C /tmp/ && \
+		cd /tmp/*$service*/ && \
+		./asinstall && \
+		rm -rf $data_home/$service/* > /dev/null",
+		onlyif => "test -f /tmp/*$service*/asinstall",
+		refreshonly => true,
+		notify => Service["$service"],
+	}
+	service { "$service":
+		name => "$service",
+		ensure => running,
+		hasstatus => true,
+		hasrestart => true,
+		enable => false,
+		subscribe => File["$conf_home/$service"],
+	}
+	File["/tmp/$service/cleanup"] ~> Exec["cleanup_$service"] ~> Service["$service"]
+	Service["$service"] -> Exec["stop_$service"] -> Exec["start_$service"] -> Exec["restart_$service"]
+}

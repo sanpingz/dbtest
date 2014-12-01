@@ -1,0 +1,136 @@
+<%# aerospike.conf %>
+<%- if @ipaddress_eth0 =~ /^37\.3\.3\.(\d+)$/ -%>
+<%- int_ip = @ipaddress_eth0 -%>
+<%- else -%>
+<%- int_ip = @ipaddress_eth1 -%>
+<%- end -%>
+# Aerospike database configuration file.
+
+# This stanza must come first.
+service {
+	user root
+	group root
+	paxos-single-replica-limit 1 # Number of nodes where the replica count is automatically reduced to 1.
+	pidfile /var/run/aerospike/asd.pid
+	service-threads 4
+	transaction-queues 4
+	transaction-threads-per-queue 4
+	proto-fd-max 15000
+}
+
+logging {
+	# Log file must be an absolute path.
+	file /local/logs/aerospike/aerospike.log {
+		context any info
+		#context any warning
+		#context ldt info
+		#context udf debug
+		#context query detail
+	}
+}
+
+network {
+	service {
+		address any
+		port 3000
+		#access-address <%= int_ip %>
+	}
+
+	heartbeat {
+		#mode multicast
+		#address 239.1.99.222
+		#port 9918
+
+		# To use unicast-mesh heartbeats, comment out the 3 lines above and
+		# use the following 4 lines instead.
+		mode mesh
+		port 3002
+		address <%= int_ip %> 
+
+<%- if @hostname != "node21" and  @hostname != "node22" -%>
+		<%- if @hostname != "node01" -%>
+		mesh-seed-address-port 37.3.3.19 3002 # IP address for seed node in the cluster
+		<%- end -%>
+		<%- if @hostname != "node02" -%>
+		mesh-seed-address-port 37.3.3.20 3002 # IP address for seed node in the cluster
+		<%- end -%>
+		<%- if @hostname != "node03" -%>
+		mesh-seed-address-port 37.3.3.21 3002 # IP address for seed node in the cluster
+		<%- end -%>
+		<%- if @hostname != "node04" -%>
+		mesh-seed-address-port 37.3.3.22 3002 # IP address for seed node in the cluster
+		<%- end -%>
+<%- else -%>
+		<%- if @hostname == "node21" -%>
+		mesh-seed-address-port 37.3.3.50 3002 # IP address for seed node in the cluster
+		<%- else -%>
+		mesh-seed-address-port 37.3.3.49 3002 # IP address for seed node in the cluster
+		<%- end -%>
+<%- end -%>
+
+		interval 150
+		timeout 20
+	}
+
+	fabric {
+		port 3001
+	}
+
+	info {
+		port 3003
+	}
+}
+
+<%- if @hostname != "node21" and  @hostname != "node22" -%>
+namespace state {
+	replication-factor 3
+	memory-size 30G
+	high-water-memory-pct 90 # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
+	stop-writes-pct 90       # Stop writes if capacity exceeds 90% of memory-size
+	default-ttl 0 # 30 days, use 0 to never expire/evict.
+	#storage-engine memory
+	high-water-disk-pct 80
+	storage-engine device {            # Configure the storage-engine to use persistence.
+		file /local/data/aerospike/data.1  # Location of data file on server.
+		file /local/data/aerospike/data.2  # (optional) Location of data file on server.
+		file /local/data/aerospike/data.3  # (optional) Location of data file on server.
+		file /local/data/aerospike/data.4  # (optional) Location of data file on server.
+		file /local/data/aerospike/data.5  # (optional) Location of data file on server.
+		filesize 10G                        # Max size of each file in GB.
+		data-in-memory true                # Indicates that all data should also be in memory.
+    }
+}
+<%- else -%>
+namespace checkpoint {
+	replication-factor 2
+	memory-size 8G
+	high-water-memory-pct 80 # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
+	stop-writes-pct 90       # Stop writes if capacity exceeds 90% of memory-size
+	default-ttl 0 # 30 days, use 0 to never expire/evict.
+	storage-engine memory
+}
+<%- end -%>
+
+#namespace test {
+#	replication-factor 2
+#	memory-size 4G
+#	default-ttl 30d # 30 days, use 0 to never expire/evict.
+#
+#	storage-engine memory
+#}
+
+#namespace bar {
+#	replication-factor 2
+#	memory-size 4G
+#	default-ttl 30d # 30 days, use 0 to never expire/evict.
+
+#	storage-engine memory
+
+	# To use file storage backing, comment out the line above and use the
+	# following lines instead.
+#	storage-engine device {
+#		file /opt/aerospike/data/bar.dat
+#		filesize 16G
+#		data-in-memory true # Store data in memory in addition to file.
+#	}
+#}
