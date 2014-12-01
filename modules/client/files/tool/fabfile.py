@@ -93,7 +93,7 @@ def disk_space():
 #### Monitor ####
 @roles('servers')
 @parallel
-def monitor(mark, proc='asd', duration=20):
+def monitor(mark, proc='asd', duration=1):
 	host = run('hostname -s')
 	#log_file = 'monitor.{0}.log'.format(host)
 	#log_dir = '%s/%s' % (LOGS_HOME, mark)
@@ -111,7 +111,7 @@ def monitor(mark, proc='asd', duration=20):
 @runs_once
 #@parallel
 #@roles('servers')
-def monitorit(mark='monitor', proc='asd', duration=20):
+def monitorit(mark='monitor', proc='asd', duration=1):
 	data = {}
 	ret = None
 	unit = {}

@@ -206,14 +206,14 @@ if __name__ == '__main__':
 			help="The interval for capture CPU, Bandwidth, and Disk")
 	parser.add_argument('-w', '--wait', action='store', type=int, dest='wait', default=0,
 			help="The interval for each monitor")
-	parser.add_argument('-u', '--duration', action='store', type=int, dest='duration', default=10,
-			help="The duration for monitoring")
+	parser.add_argument('-u', '--duration', action='store', type=float, dest='duration', default=1,
+			help="The duration(minutes) for monitoring")
 	parser.add_argument('-s', '--status', action='store_true', dest='status', default=False,
 			help="Print monitor status or not")
 	parser.add_argument('-f', '--format', action='store', dest='format', default='table',
 			help="Output format: (json, dict, table)")
 	args = parser.parse_args()
 
-	ret = monitorit(name=args.name, device=args.device, nic=args.nic, interval=args.interval, wait=args.wait, duration=args.duration, status=args.status)
+	ret = monitorit(name=args.name, device=args.device, nic=args.nic, interval=args.interval, wait=args.wait, duration=int(args.duration*60), status=args.status)
 	pretty_print(ret, args.format)
 
