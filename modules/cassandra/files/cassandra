@@ -16,7 +16,6 @@ NAME=cassandra
 CASSANDRA_HOME=/local/apps/$NAME
 CASSANDRA_CONF=/local/conf/$NAME
 CASSANDRA_LOGS=/local/logs/$NAME 
-CASSANDRA_DATA=/local/data/$NAME
 CASSANDRA_RUN=/var/run/$NAME
 CASSANDRA_LOCK=/var/lock/subsys
 ##SUCCESS_INFO="Startup completed! Now serving reads"
@@ -25,7 +24,7 @@ SUCCESS_INFO="state jump to normal"
 export CASSANDRA_HOME CASSANDRA_CONF
 
 USER=root
-OPTIONS=""
+OPTIONS="-Dcassandra.logdir=$CASSANDRA_LOGS"
 
 [ ! -d $CASSANDRA_LOGS ] && mkdir -p $CASSANDRA_LOGS
 [ ! -d $CASSANDRA_RUN ] && mkdir -p $CASSANDRA_RUN
@@ -37,8 +36,8 @@ OPTIONS=""
 RETVAL=0
 prog=$CASSANDRA_HOME/bin/cassandra
 logfile=$CASSANDRA_LOGS/setup.log
-pidfile=${PIDFILE-/var/run/cassandra/cassandra.pid}
-lockfile=${LOCKFILE-/var/lock/subsys/cassandra}
+pidfile=${PIDFILE-"$CASSANDRA_RUN/$NAME.pid"}
+lockfile=${LOCKFILE-"$CASSANDRA_LOCK/$NAME"}
 
 setup_check () {
 	MAX_TIME=45

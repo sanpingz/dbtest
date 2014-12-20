@@ -1,42 +1,42 @@
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
-37.3.3.48	myinstance
-37.3.3.1  puppet puppet.novalocal puppet.openstacklocal ntpserver
-37.3.3.47  db-client db-client.novalocal db-client.openstacklocal
-37.3.3.11  db-node db-node.novalocal db-node.openstacklocal
+192.30.252.130	github.com
+37.6.2.13       puppet puppet.openstacklocal ntpserver
+37.6.2.14       base base.openstacklocal
 
-37.3.3.39 client01 client01.novalocal client01.openstacklocal
-37.3.3.40 client02 client02.novalocal client02.openstacklocal
-37.3.3.41 client03 client03.novalocal client03.openstacklocal
-37.3.3.42 client04 client04.novalocal client04.openstacklocal
-37.3.3.43 client05 client05.novalocal client05.openstacklocal
-37.3.3.44 client06 client06.novalocal client06.openstacklocal
-37.3.3.45 client07 client07.novalocal client07.openstacklocal
-37.3.3.46 client08 client08.novalocal client08.openstacklocal
-37.3.3.51 client09 client09.novalocal client09.openstacklocal
-37.3.3.52 client10 client10.novalocal client10.openstacklocal
-37.3.3.53 client11 client11.novalocal client11.openstacklocal
+37.6.2.16 client01 client01.openstacklocal
+37.6.2.28 client02 client02.openstacklocal
+37.6.2.26 client03 client03.openstacklocal
+37.6.2.29 client04 client04.openstacklocal
+37.6.2.24 client05 client05.openstacklocal
+37.6.2.27 client06 client06.openstacklocal
+37.6.2.25 client07 client07.openstacklocal
+37.6.2.30 client08 client08.openstacklocal
+37.6.2.59 client09 client09.openstacklocal
+37.6.2.60 client10 client10.openstacklocal
 
-37.3.3.19  node01 node01.novalocal node01.openstacklocal
-37.3.3.20  node02 node02.novalocal node02.openstacklocal
-37.3.3.21  node03 node03.novalocal node03.openstacklocal
-37.3.3.22  node04 node04.novalocal node04.openstacklocal
-37.3.3.23  node05 node05.novalocal node05.openstacklocal
-37.3.3.24  node06 node06.novalocal node06.openstacklocal
-37.3.3.25  node07 node07.novalocal node07.openstacklocal
-37.3.3.26  node08 node08.novalocal node08.openstacklocal
-37.3.3.27  node09 node09.novalocal node09.openstacklocal
-37.3.3.28  node10 node10.novalocal node10.openstacklocal
-37.3.3.29  node11 node11.novalocal node11.openstacklocal
-37.3.3.30  node12 node12.novalocal node12.openstacklocal
-37.3.3.31  node13 node13.novalocal node13.openstacklocal
-37.3.3.32  node14 node14.novalocal node14.openstacklocal
-37.3.3.33  node15 node15.novalocal node15.openstacklocal
-37.3.3.34  node16 node16.novalocal node16.openstacklocal
-37.3.3.35  node17 node17.novalocal node17.openstacklocal
-37.3.3.36  node18 node18.novalocal node18.openstacklocal
-37.3.3.37  node19 node19.novalocal node19.openstacklocal
-37.3.3.38  node20 node20.novalocal node20.openstacklocal
-37.3.3.49  node21 node21.novalocal node21.openstacklocal
-37.3.3.50  node22 node22.novalocal node22.openstacklocal
+37.6.2.31  node01 node01.openstacklocal
+37.6.2.32  node02 node02.openstacklocal
+37.6.2.33  node03 node03.openstacklocal
+37.6.2.34  node04 node04.openstacklocal
+37.6.2.35  node05 node05.openstacklocal
+37.6.2.36  node06 node06.openstacklocal
+37.6.2.37  node07 node07.openstacklocal
+37.6.2.38  node08 node08.openstacklocal
+37.6.2.39  node09 node09.openstacklocal
+37.6.2.40  node10 node10.openstacklocal
+37.6.2.41  node11 node11.openstacklocal
+37.6.2.42  node12 node12.openstacklocal
+37.6.2.43  node13 node13.openstacklocal
+37.6.2.44  node14 node14.openstacklocal
+37.6.2.45  node15 node15.openstacklocal
+37.6.2.61  node16 node16.openstacklocal
+37.6.2.47  node17 node17.openstacklocal
+37.6.2.48  node18 node18.openstacklocal
+37.6.2.49  node19 node19.openstacklocal
+37.6.2.50  node20 node20.openstacklocal
+37.6.2.51  node21 node21.openstacklocal
+37.6.2.52  node22 node22.openstacklocal
+37.6.2.53  node23 node23.openstacklocal
+37.6.2.54  node24 node24.openstacklocal

@@ -2,7 +2,7 @@
 import re, os, sys
 
 def get_sum(log_file):
-	ptn = re.compile(r'\[[^C]+?\], (\d+)?[A-Za-z]+')
+	ptn = re.compile(r'\[[^C]+?\], (\d+)?[A-Za-z.]+')
 	with open(log_file) as f:
 		while True:
 			line = f.readline()

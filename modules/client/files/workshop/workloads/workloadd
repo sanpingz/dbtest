@@ -1,15 +1,54 @@
-cassandra.columnfamily=table4
+## Yahoo! Cloud System Benchmark
+
+## Aerospike
+ns=state
+set=prid
+
+## Cassandra
+table=state
+cassandra.columnfamily=prid
+cassandra.readconsistencylevel=QUORUM
+cassandra.writeconsistencylevel=QUORUM
+cassandra.scanconsistencylevel=QUORUM
+cassandra.deleteconsistencylevel=QUORUM
+
+## Common
 fieldcount=1
 fieldlength=256
+fieldnameprefix=field
 
 threadcount=50
-target=347
+target=139
 
-recordcount=10000000
-operationcount=10000000
+recordcount=5000000
+operationcount=1000000000000000000
+maxexecutiontime=600
 
-readproportion=0.20
-updateproportion=0.40
+readallfields=true
+writeallfields=true
+
+readproportion=0
+updateproportion=0.50
 scanproportion=0
 insertproportion=0
-deleteproportion=0.40
+deleteproportion=0.50
+readmodifywriteproportion=0
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+##  uniform, zipfian or latest
+requestdistribution=zipfian
+## Default: histogram. Options: histogram, timeseries
+measurementtype=histogram
+## Interval for reporting in ms
+timeseries.granularity=1000
+## 5 sec limit before reconnection
+reconnectiontime=5000
+exportmeasurementsinterval=10000
+insertorder=hashed
+
+#maxscanlength=1000
+#scanlengthdistribution=uniform
+
+ignoreinserterrors=true
+insertretrycount=10
+retrydelay=1

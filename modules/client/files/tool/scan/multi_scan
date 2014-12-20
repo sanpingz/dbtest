@@ -1,0 +1,3 @@
+#!/bin/bash
+
+java -jar query-with-filters-3.0.22-jar-with-dependencies.jar "$@"

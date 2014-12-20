@@ -1,0 +1,32 @@
+#!/bin/bash
+
+DB=aerospike
+#RECORD=5000000
+THREADS=20
+ACTION=${1:-"load"}
+MARK=${2:-"default"}
+RUNTIME=${3:-"30"}
+declare -a workloads=(a b c d)
+declare -a targets=(15488 10069 347 139)
+declare -a records=(5000000 5000000 10000000 5000000)
+#declare -a records=(5000000 3400000 10000000 5000000)
+
+#declare -a workloads=(b)
+#declare -a targets=(0)
+#declare -a records=(5000000)
+
+PROC='asd'
+NIC='eth0'
+DEVICE='vda2'
+
+for (( i=0; i<${#workloads[@]}; i++ )); do
+	cmd="fab run_test:$ACTION,workload=${workloads[i]},recordcount=${records[i]},runtime=$RUNTIME,threads=$THREADS,target=${targets[i]},mark=$MARK,save=\"true\" --set db=$DB"
+	echo $cmd
+	$cmd &
+done
+
+if [[ "X$ACTION" == "Xrun" ]]; then
+	cmd="fab monitorit:mark=$MARK,proc=$PROC,nic=$NIC,device=$DEVICE,duration=$RUNTIME,save=\"true\" --set db=$DB"
+	echo $cmd
+	$cmd &
+fi

@@ -5,17 +5,19 @@ function usage {
 }
 
 ## for Node
-#FLAVOR="m2.large"
-#IMAGE="DB_Node_SS"
+#FLAVOR="db.node-4-32"
+#IMAGE="Base"
 ## for Client
-FLAVOR="CAU-4-99"
-IMAGE="DB_Client_SS"
+FLAVOR="db.node-8-4"
+IMAGE="Base"
 
-NETID1="net-id=71af3db1-7293-45ee-9d8e-e32b883e578f --nic net-id=3b68ed07-3984-4014-86de-baed44e604be"	#ISC-EXT1 ISC-INT1
-NETID2="net-id=3b68ed07-3984-4014-86de-baed44e604be"	#ISC-INT1
-NETID3="net-id=c1addb82-1321-4fe8-82eb-6f67a1b64e28 --nic net-id=d48a7ae5-9804-4dd4-a0fc-b15e4cd48bf0 --nic net-id=f2d6724d-c62d-4097-885e-515e2dd9e6ce"	#ISC-EXT1 ISC-INT1
+ISC_INT1="ad6cdf4d-7ea4-4e24-a83e-2156471299ce"
+ISC_EXT1="03e819d7-fce9-4c94-ad76-478160f3ea5a"
 
-declare -a AZ=("zone1" "zone2" "zone3" "zone4")
+NETID1="net-id=$ISC_INT1 --nic net-id=$ISC_EXT1"	#ISC-INT1 ISC-EXT1
+NETID2="net-id=$ISC_INT1"	#ISC-INT1
+
+declare -a AZ=("zone0" "zone1")
 N=$1
 NAME=$2
 OPT=$3
@@ -29,13 +31,15 @@ function boot {
 	image=$3
 	netid=$4
 	name=$5
-	BOOT="nova boot --availability-zone $az --flavor $flavor --image $image --nic $netid --config-drive true $name"
+	#BOOT="nova boot --availability-zone $az --flavor $flavor --image $image --nic $netid --config-drive true $name"
+	BOOT="nova boot --availability-zone $az --flavor $flavor --image $image --nic $netid $name"
 	echo $BOOT
 	[ "$OPT" != "-o" ] && $BOOT
 }
 
 if [ $N -eq 1 ]; then
-	boot ${AZ[0]} $FLAVOR $IMAGE "$NETID3" $NAME
+	boot ${AZ[0]} $FLAVOR $IMAGE "$NETID1" $NAME
+	# boot ${AZ[0]} $FLAVOR $IMAGE "$NETID2" $NAME
 elif [ $N -gt 1 ]; then
 	count=${#AZ[@]}
 	prefix=${NAME:-$PREFIX}
@@ -64,6 +68,7 @@ elif [ $N -gt 1 ]; then
 		idx=$[(i-1)%count]
 		az=${AZ[idx]}
 		boot $az $FLAVOR $IMAGE "$netid" $name
+		# sleep 1
 	done
 else
 	printf "Invalid instance number $N\n"

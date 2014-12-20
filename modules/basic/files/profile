@@ -77,45 +77,53 @@ done
 unset i
 unset -f pathmunge
 
-##JDK
+## JDK
 JAVA_HOME=/usr/java/default
-JRE_HOME=$JAVA_HOME/jre
 PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
-CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
-export JAVA_HOME JRE_HOME PATH CLASSPATH
+CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JAVA_HOME/jre/lib
+export JAVA_HOME PATH CLASSPATH
 
-##tool
+## Maven
+M2_HOME=/usr/local/maven
+[ -d $M2_HOME/bin ] && export PATH=$PATH:$M2_HOME/bin && export M2_HOME
+
+## Tool
 TOOL_HOME=/local/tool
 JNA_JAR=jna-4.1.0.jar
 [ -d $TOOL_HOME/bin ] && export PATH=$PATH:$TOOL_HOME/bin
 [ -d $TOOL_HOME/lib ] && export CLASSPATH=$CLASSPATH:$TOOL_HOME/lib
 [ -f $TOOL_HOME/lib/$JNA_JAR ] && export CLASSPATH=$CLASSPATH:$TOOL_HOME/lib/$JNA_JAR
 
-##YCSB
+## YCSB
 YCSB_HOME=/local/apps/ycsb
 [ ! -d $YCSB_HOME ] && YCSB_HOME=/usr/local/ycsb
 [ -d $YCSB_HOME ] && export PATH=$PATH:$YCSB_HOME/bin
 
-##Cassandra
+## Cassandra
 CASSANDRA_HOME=/local/apps/cassandra
 [ ! -d $CASSANDRA_HOME ] && CASSANDRA_HOME=/usr/local/cassandra
 [ -d $CASSANDRA_HOME ] && export PATH=$PATH:$CASSANDRA_HOME/bin:$CASSANDRA_HOME/tools/bin
 
-##Redis
+## Redis
 REDIS_HOME=/local/apps/redis
 [ ! -d $REDIS_HOME ] && REDIS_HOME=/usr/local/redis
 [ -d $REDIS_HOME ] && export PATH=$PATH:$REDIS_HOME/bin
 
-##Aerospike
+## Aerospike
 AEROSPIKE_HOME=/local/apps/aerospike
 [ ! -d $AEROSPIKE_HOME ] && AEROSPIKE_HOME=/usr/local/aerospike
 [ -d $AEROSPIKE_HOME ] && export PATH=$PATH:$AEROSPIKE_HOME/bin
+
+## Infinispan
+ISPN_SERVER_HOME=/local/apps/infinispan
+[ ! -d $ISPN_SERVER_HOME ] && ISPN_SERVER_HOME=/usr/local/infinispan
+[ -d $ISPN_SERVER_HOME ] && export PATH=$PATH:$ISPN_SERVER_HOME/bin
 
 ## Golang
 GOPATH=/local/repo/go
 [ -d $GOPATH ] && export GOPATH && export PATH=$PATH:$GOPATH/bin
 
-##User Defined
+## User Defined
 set -o vi
 [ -x /usr/bin/vim ] && alias vi=/usr/bin/vim
 HISTSIZE=5000

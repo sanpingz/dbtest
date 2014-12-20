@@ -5,12 +5,19 @@ class client {
 			$apps_home = '/local/apps'
 			$tool_home = '/local/tool'
 			$ycsb_tar = 'ycsb-0.1.5.tar.gz'
-			$cassandra_tar = 'apache-cassandra-2.1.0-bin.tar.gz'
+			$cassandra_tar = 'apache-cassandra-2.1.2-bin.tar.gz'
 			$redis_tar = 'redis-3.0.tar.gz'
 			$cluster_conf = 'cluster.conf'
 			$files_home = 'puppet:///modules/client'
 			$extra_home = 'puppet:///extra_files'
 		}
+	}
+	file { '/boot/grub/grub.conf':
+	    mode => 600,
+		owner => root,
+		group => root,
+		ensure => file,
+		source => "$files_home/grub.conf",
 	}
 	file { '/local/workshop':
 		mode => 644,

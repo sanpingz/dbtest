@@ -1,5 +1,5 @@
 <%# aerospike.conf %>
-<%- if @ipaddress_eth0 =~ /^37\.3\.3\.(\d+)$/ -%>
+<%- if @ipaddress_eth0 =~ /^37\.6\.2\.(\d+)$/ -%>
 <%- int_ip = @ipaddress_eth0 -%>
 <%- else -%>
 <%- int_ip = @ipaddress_eth1 -%>
@@ -33,7 +33,7 @@ network {
 	service {
 		address any
 		port 3000
-		#access-address <%= int_ip %>
+		access-address <%= int_ip %>
 	}
 
 	heartbeat {
@@ -47,24 +47,31 @@ network {
 		port 3002
 		address <%= int_ip %> 
 
+		# 37.6.2.31  node01
+		# 37.6.2.32  node02
+		# 37.6.2.33  node03
+		# 37.6.2.34  node04
+		# 37.6.2.51  node21 
+		# 37.6.2.52  node22 
+
 <%- if @hostname != "node21" and  @hostname != "node22" -%>
 		<%- if @hostname != "node01" -%>
-		mesh-seed-address-port 37.3.3.19 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.31 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node02" -%>
-		mesh-seed-address-port 37.3.3.20 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.32 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node03" -%>
-		mesh-seed-address-port 37.3.3.21 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.33 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node04" -%>
-		mesh-seed-address-port 37.3.3.22 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.34 3002 # IP address for seed node in the cluster
 		<%- end -%>
 <%- else -%>
 		<%- if @hostname == "node21" -%>
-		mesh-seed-address-port 37.3.3.50 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.52 3002 # IP address for seed node in the cluster
 		<%- else -%>
-		mesh-seed-address-port 37.3.3.49 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 37.6.2.51 3002 # IP address for seed node in the cluster
 		<%- end -%>
 <%- end -%>
 
@@ -88,17 +95,15 @@ namespace state {
 	high-water-memory-pct 90 # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
 	stop-writes-pct 90       # Stop writes if capacity exceeds 90% of memory-size
 	default-ttl 0 # 30 days, use 0 to never expire/evict.
-	#storage-engine memory
-	high-water-disk-pct 80
-	storage-engine device {            # Configure the storage-engine to use persistence.
+	high-water-disk-pct 90
+#	storage-engine memory
+	storage-engine device {                # Configure the storage-engine to use persistence.
+		write-block-size 1M
+		defrag-lwm-pct 25
 		file /local/data/aerospike/data.1  # Location of data file on server.
-		file /local/data/aerospike/data.2  # (optional) Location of data file on server.
-		file /local/data/aerospike/data.3  # (optional) Location of data file on server.
-		file /local/data/aerospike/data.4  # (optional) Location of data file on server.
-		file /local/data/aerospike/data.5  # (optional) Location of data file on server.
-		filesize 10G                        # Max size of each file in GB.
+		filesize 100G                       # Max size of each file in GB.
 		data-in-memory true                # Indicates that all data should also be in memory.
-    }
+	}
 }
 <%- else -%>
 namespace checkpoint {

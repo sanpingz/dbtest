@@ -55,7 +55,7 @@ class cassandra {
 		ensure => directory,
 	}
 	file { "$conf_home/$service":
-		mode => 755,
+		mode => 644,
 		owner => root,
 		group => root,
 		source => "$extra_home/conf/$service",

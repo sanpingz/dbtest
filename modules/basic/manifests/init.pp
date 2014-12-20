@@ -63,8 +63,8 @@ class basic {
 	}
 	service { 'puppet':
 		name => 'puppet',
-		ensure => running,
-		enable => true,
+		ensure => stopped,
+		enable => false,
 		subscribe => File['puppet.conf', 'puppet', 'auth.conf'],
 	}
 	file { '/local':
