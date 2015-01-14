@@ -247,10 +247,6 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 		ops = ops + " -target {0}".format(target/clients_num)
 	ops = ops + " -threads {0}".format(threads/clients_num)
 
-	#!! remove
-	if db == 'redis':
-		 ops = ops + " -p redis.port=7000"
-
 	with settings(hide('warnings', 'running'), warn_only=True, combine_stderr=False):
 		run('[ ! -d {0} ] && mkdir -p {0}'.format(WORKSHOP))
 		with cd(WORKSHOP):
