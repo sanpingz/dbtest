@@ -476,7 +476,7 @@ def cluster_info(db, redis_port=6379):
 			return run(cmd)
 
 @runs_once
-def db_info(db, redis_port='7000:7001', fil=None):
+def db_info(db, redis_port='6379:6380', fil=None):
 	strn = []
 	inst_count = [0]
 	def get_recordcount(_port=6379):
