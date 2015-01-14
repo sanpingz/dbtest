@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+[ -f /local/tools/cluster.conf ] && . /local/tools/cluster.conf
 
 DB=${YDB:-cassandra}
 CF_NUM=${CF_NUM:-5}

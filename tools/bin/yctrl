@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+[ -f /local/tools/cluster.conf ] && . /local/tools/cluster.conf
 action=$1
 P2=$2
 DB=${DB:-"cassandra"}
@@ -11,8 +11,8 @@ host=${host:-node01}
 case "$action" in
 	start|stop|restart|cleanup|refresh)
 		[ "X$action" != "Xrefresh" ] && echo `date` > $LOC/$action
-		[ "X$action" = "Xcleanup" ] && /local/tool/bin/yhint ${HOSTS}
-		/local/tool/bin/switchto ${DB} ${NODES}
+		[ "X$action" = "Xcleanup" ] && /local/tools/bin/yhint ${HOSTS}
+		/local/tools/bin/switchto ${DB} ${NODES}
 		;;
 	status)
 		/usr/bin/nodetool -h ${host} status $P2

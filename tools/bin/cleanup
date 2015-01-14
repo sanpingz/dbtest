@@ -1,9 +1,9 @@
 #!/bin/bash
 
-[ -f /local/tool/cluster.conf ] && . /local/tool/cluster.conf
+[ -f /local/tools/cluster.conf ] && . /local/tools/cluster.conf
 DB=${DB:-"cassandra"}
 PUPPET_HOME=${PUPPET_HOME:-"/local/puppet"}
-TOOL_HOME=${TOOL_HOME:-"/local/tool"}
+TOOL_HOME=${TOOL_HOME:-"/local/tools"}
 
 echo `date` > ${PUPPET_HOME}/status/$DB/cleanup
 ${TOOL_HOME}/bin/switchto ${DB} $1

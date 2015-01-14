@@ -11,6 +11,7 @@ if env.get('pw'):
 WORKSHOP = '/local/workshop/{0}'.format(DB)
 LOGS_HOME = '/local/logs/{0}'.format(DB)
 MONITOR_HOME = '/tmp/{0}'.format(DB)
+TOOLS_HOME = '/local/tools'
 
 CLIENTS = ["{0}{1:02}".format('client',x) for x in range(1, 10+1)]
 DBS = ["{0}{1:02}".format('node',x) for x in range(1, 24+1)]
@@ -112,7 +113,7 @@ def monitor(mark, proc='asd', nic='eth0', device='vda2', duration=1):
 		run('[ ! -d {0} ] && mkdir -p {0}'.format(MONITOR_HOME))
 		#nic = 'eth1' if run('ifconfig eth0|grep 37.3.3') == '' else 'eth0'
 		with cd(MONITOR_HOME):
-			put('/local/tool/bin/monitor.py', MONITOR_HOME)
+			put(TOOLS_HOME + '/bin/monitor.py', MONITOR_HOME)
 			run('chmod +x {0}/monitor.py'.format(MONITOR_HOME))
 			return run('./monitor.py -p {0} -n {1} -d {2} -f {3} -u {4}'.format(proc, nic, device, 'json', duration))
 			#get(log_file, local_log)
@@ -255,8 +256,8 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 		with cd(WORKSHOP):
 			run('ycsb {0} {1} -P ../workloads/{2} -p {3}={4} {5} -s > {6}'.format(action, db, workload, _host, contact, ops, log_file))
 			get(log_file, local_log)
-			#return local('get_sum {0}'.format(local_log))
-			return run('get_sum {0}'.format(log_file))
+			#return local('ycsb_sum {0}'.format(local_log))
+			return run('ycsb_sum {0}'.format(log_file))
 
 @parallel
 def run_test(action, workload='a', runtime=10, threads=50, target=None, recordcount=5000000, mark='default', flag=None, save='true', ops=''):
@@ -367,6 +368,7 @@ def kill(proc='java', force=False):
 		#if force or confirm(red("Do you want to kill Java on the client?")):
 		#	run('killall java')
 
+#### DB scanning ####
 @roles('clients')
 @parallel
 def scanning(fc=1, threads=5, target=0, repeat=10, ra='false', rs='false'):
@@ -381,8 +383,10 @@ def scanning(fc=1, threads=5, target=0, repeat=10, ra='false', rs='false'):
 	if idx == N:
 		r2 = PARTITIONS
 	partition = '{0}-{1}'.format(r1, r2)
-	with settings(warn_only=True, combine_stderr=False):
-		with cd('/local/tool/scan'):
+	with settings(hide('warnings'), warn_only=True, combine_stderr=False):
+		run('[ ! -d {0} ] && mkdir -p {0}'.format(TOOLS_HOME + '/scan'))
+		put(TOOLS_HOME + '/scan', TOOLS_HOME)
+		with cd(TOOLS_HOME + '/scan'):
 			cmd = './multi_scan -f {0} -t {1} -r {2} -P {3} -g {4} -d'.format(fc, threads, repeat, partition, target/N)
 			if ra == 'true':
 				cmd += ' -a'

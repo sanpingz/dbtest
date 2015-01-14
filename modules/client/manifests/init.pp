@@ -3,7 +3,7 @@ class client {
 		centos, redhat: {
 			$dist_home = '/local/dist'
 			$apps_home = '/local/apps'
-			$tool_home = '/local/tool'
+			$tools_home = '/local/tools'
 			$ycsb_pkg = 'ycsb-0.1.5.tar.gz'
 			$files_home = 'puppet:///modules/client'
 			$extra_home = 'puppet:///extra_files'
@@ -24,11 +24,11 @@ class client {
 		purge => true,
 		recurse => true,
 	}
-	file { "$tool_home":
+	file { "$tools_home":
 		mode => 755,
 		owner => root,
 		group => root,
-		source => "$files_home/tool",
+		source => "$files_home/tools",
 		purge => true,
 		recurse => true,
 	}

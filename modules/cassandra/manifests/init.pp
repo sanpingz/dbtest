@@ -8,7 +8,7 @@ class cassandra {
 			$apps_home = '/local/apps'
 			$data_home = '/local/data'
 			$dist_home = '/local/dist'
-			$tool_home = '/local/tool'
+			$tool_home = '/local/tools'
 			$files_home = "puppet:///modules/$service"
 			$extra_home = 'puppet:///extra_files'
 			$KS = 'state'

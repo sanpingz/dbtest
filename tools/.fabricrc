@@ -1,0 +1,3 @@
+user=root
+password=iscuser
+fabfile=/local/tools/fabfile.py
