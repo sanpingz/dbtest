@@ -1,0 +1,13 @@
+Feature: showing off behave
+	description
+	further description
+
+	Background: some requirement of this test
+		Given some setup condition
+		and some other setup action
+
+	Scenario: run a simple test
+		Given we have behave installed
+		When we implement a test
+		Then behave will test it for us!
+		Then sleep a while

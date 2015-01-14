@@ -46,7 +46,7 @@ class redis {
 		path => "$conf_home/$service/$conf_file",
 		ensure => file,
 		source => "$extra_home/conf/$service/${conf_file}",
-		notify => Service['redis'],
+		notify => Service["$service"],
 	}
 	file { "$pkg_file":
 		mode => 644,

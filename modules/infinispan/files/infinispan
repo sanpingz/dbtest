@@ -17,6 +17,7 @@ export JAVA_HOME
 
 prog='infinispan-server'
 ISPN_SERVER_CONF=/local/conf/infinispan/$prog.conf
+OPTS=''
 
 # Load Infinispan Server init.d configuration.
 if [ -z "$ISPN_SERVER_CONF" ]; then
@@ -24,6 +25,13 @@ if [ -z "$ISPN_SERVER_CONF" ]; then
 fi
 
 [ -r "$ISPN_SERVER_CONF" ] && . "${ISPN_SERVER_CONF}"
+
+## Addtional config
+[ ! -z "$ISPN_SERVER_LOG_HOME" ] && OPTS="$OPTS -Djboss.server.log.dir=$ISPN_SERVER_LOG_HOME"
+[ ! -z "$ISPN_SERVER_CONF_HOME" ] && OPTS="$OPTS -Djboss.server.config.dir=$ISPN_SERVER_CONF_HOME/configuration"
+[ ! -z "$BROADCAST_ADDR" ] && OPTS="$OPTS -Djboss.bind.address=$(ifconfig|grep Bcast:$BROADCAST_ADDR |awk -F [:" "]+ '{print $4}')"
+OPTS="$OPTS -Djboss.host.name=$(hostname -s)"
+OPTS="$OPTS -Djava.net.preferIPv4Stack=true"
 
 # Set defaults.
 
@@ -90,9 +98,9 @@ start() {
 
   if [ ! -z "$ISPN_SERVER_USER" ]; then
     if [ -r /etc/rc.d/init.d/functions ]; then
-      daemon --user $ISPN_SERVER_USER LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$ISPN_SERVER_PIDFILE RUN_CONF="$ISPN_SERVER_RUN_CONF" $ISPN_SERVER_SCRIPT -c $ISPN_SERVER_CONFIG 2>&1 > $ISPN_SERVER_CONSOLE_LOG &
+      daemon --user $ISPN_SERVER_USER LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$ISPN_SERVER_PIDFILE RUN_CONF="$ISPN_SERVER_RUN_CONF" $ISPN_SERVER_SCRIPT -c $ISPN_SERVER_CONFIG $OPTS 2>&1 > $ISPN_SERVER_CONSOLE_LOG &
     else
-      su - $ISPN_SERVER_USER -c "LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$ISPN_SERVER_PIDFILE RUN_CONF=\"$ISPN_SERVER_RUN_CONF\" $ISPN_SERVER_SCRIPT -c $ISPN_SERVER_CONFIG" 2>&1 > $ISPN_SERVER_CONSOLE_LOG &
+      su - $ISPN_SERVER_USER -c "LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$ISPN_SERVER_PIDFILE RUN_CONF=\"$ISPN_SERVER_RUN_CONF\" $ISPN_SERVER_SCRIPT -c $ISPN_SERVER_CONFIG" $OPTS 2>&1 > $ISPN_SERVER_CONSOLE_LOG &
     fi
   fi
 

@@ -1,39 +1,38 @@
-from fabric.api import run, env, put, get, roles, execute, local, parallel, serial, reboot, cd, settings, hosts, task, runs_once
+from fabric.api import run, env, put, get, roles, execute, local, parallel, serial, reboot, cd, settings, hosts, task, runs_once, hide, show
 from fabric.colors import green, blue, red
 from fabric.contrib.console import confirm
 import re, os, json, random
 from hashlib import md5 as hash
 
-N = env.get('n') or 24
-PREFIX = env.get('p') or 'node'
-N=int(N)
-
 DB = env.get('db') or 'default'
-COORDINATOR='node01'
-WORKSHOP='/local/workshop/{0}'.format(DB)
-LOGS_HOME='/local/logs/{0}'.format(DB)
-MONITOR_HOME='/tmp/{0}'.format(DB)
-if env.get('n') or env.get('p') or env.get('h'):
-	env.hosts = env.get('h') or [ "%s%02d" % (PREFIX,x) for x in range(1,N+1)]
+if env.get('pw'):
+	env.password = env.get('pw')
 
-CLIENTS = ["%s%02d" % ('client',x) for x in range(1,10+1)]
-DBS = ["%s%02d" % ('node',x) for x in range(1,N+1)]
+WORKSHOP = '/local/workshop/{0}'.format(DB)
+LOGS_HOME = '/local/logs/{0}'.format(DB)
+MONITOR_HOME = '/tmp/{0}'.format(DB)
+
+CLIENTS = ["{0}{1:02}".format('client',x) for x in range(1, 10+1)]
+DBS = ["{0}{1:02}".format('node',x) for x in range(1, 24+1)]
+
 env.roledefs = {
 	#list of client hosts
-	'clients': CLIENTS[:10],
-	'state_clients': CLIENTS[:6],
+	'clients': CLIENTS[:2],
+	'ispn_clients': CLIENTS[-2:],
+	'all_clients': CLIENTS,
 	#list of DB server hosts
-	'servers': DBS[:20],
-	'state_servers': DBS[:20],
-	'checkpoint_servers': DBS[20:22],
+	'servers': DBS[:6],
+	'ispn_servers': DBS[9:15],
+	'all_servers': DBS,
 	#list of all available hosts
 	'all_hosts': CLIENTS + DBS,
 }
 
 NODE_LIST = ",".join(env.roledefs['servers'])
+COORDINATOR = random.choice(env.roledefs['servers'])
 
 #### Common ####
-@roles('all_hosts')
+#@roles('all_hosts')
 def hostname():
 	run('hostname -s')
 
@@ -60,42 +59,44 @@ def os_reboot():
 
 #### Puppet ####
 @parallel
-@roles('servers', 'clients')
+#@roles('all_hosts')
 def puppet():
-	run('puppet agent -t', warn_only=True, combine_stderr=False)
+	with settings(hide('warnings'), warn_only=True, combine_stderr=False):
+		run('puppet agent -t')
 
+@parallel
 def init_puppet():
-	name=run('hostname')
-	try:
-		local('puppet cert clean {0}.openstacklocal'.format(name), warn_only=True, combine_stderr=False)
-	except: pass
+	name=run('hostname -s')
+	local('puppet cert clean {0}.openstacklocal'.format(name))
 	run('find /var/lib/puppet/ssl -name {0}.openstacklocal.pem -delete'.format(name), warn_only=True, combine_stderr=False)
 
 #### Deploy ####
-@roles('servers')
+#@roles('servers')
 @parallel
 def deploy_as():
 	service = 'aerospike'
+	reinstall = ''
 	pkg = 'aerospike.tgz'
 	dist_home = '/local/dist'
 	files_home = '/local/puppet/files'
-	put('{0}/{1}'.format(files_home,pkg), dist_home)
-	run('rm -rf /tmp/*{0}*'.format(service))
-	run('tar -zxvf {0}/{1} -C /tmp/'.format(dist_home,pkg))
-	run('if [ "$(rpm -qa|grep {0})" == "" ]; then test -f /tmp/*{0}*/asinstall && cd /tmp/*{0}*/ && ./asinstall; fi'.format(service), warn_only=True, combine_stderr=False)
+	with settings(hide('warnings'), warn_only=True, combine_stderr=False):
+		put('{0}/{1}'.format(files_home,pkg), dist_home)
+		run('rm -rf /tmp/*{0}*'.format(service))
+		run('tar -zxvf {0}/{1} -C /tmp/'.format(dist_home,pkg))
+		run('if [ "$(rpm -qa|grep {0}{1})" == "" ]; then test -f /tmp/*{0}*/asinstall && cd /tmp/*{0}*/ && ./asinstall; fi'.format(service, reinstall), warn_only=True, combine_stderr=False)
 
 #### Disk ####
-@roles('servers')
+#@roles('servers')
 @parallel
 def disk_format():
 	run('printf "n\np\n2\n\n\nw\n" | fdisk /dev/vda', warn_only=True, combine_stderr=False)
 
-@roles('servers')
+#@roles('servers')
 @parallel
 def disk_mount():
 	run('mkfs.ext3 /dev/vda2 && rm -rf /local/data && mkdir -p /local/data && mount /dev/vda2 /local/data && echo "/dev/vda2               /local/data             ext3    defaults        0 0" >> /etc/fstab', warn_only=True, combine_stderr=False)
 
-@roles('servers')
+#@roles('servers')
 def disk_space():
 	run('df -h')
 
@@ -107,7 +108,7 @@ def monitor(mark, proc='asd', nic='eth0', device='vda2', duration=1):
 	#log_file = 'monitor.{0}.log'.format(host)
 	#log_dir = '%s/%s' % (LOGS_HOME, mark)
 	#local_log = '%s/%s' % (log_dir, log_file)
-	with settings(warn_only=True, combine_stderr=False):
+	with settings(hide('warnings' ,'running'), warn_only=True, combine_stderr=False):
 		run('[ ! -d {0} ] && mkdir -p {0}'.format(MONITOR_HOME))
 		#nic = 'eth1' if run('ifconfig eth0|grep 37.3.3') == '' else 'eth0'
 		with cd(MONITOR_HOME):
@@ -168,13 +169,10 @@ def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1,
 		print('\n'.join(prt))
 		if save == 'true':
 			fil = LOGS_HOME+'/'+mark+'/'+'monitor.out'
-			try:
-				with open(fil, 'w') as f:
-					f.write('\n'.join(prt))
-					print('')
-					print("Saved as " + fil)
-			except IOError, e:
-				print(e)
+			with open(fil, 'w') as f:
+				f.write('\n'.join(prt))
+				print('')
+				print("Saved as " + fil)
 
 	for k,v in data.items():
 		ret = ret or v
@@ -199,18 +197,20 @@ def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1,
 #### YCSB ####
 @roles('clients')
 @parallel
-def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threads=50, runtime=10, recordcount=5000000, flag=None):
+def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threads=50, runtime=10, recordcount=5000000, flag=None, ops=''):
 	threads = int(threads)
 	recordcount = int(recordcount)
 	clients_num = len(env.roledefs['clients'])
+	if clients_num > threads:
+		print('thread count({0}) should >= client number({1})'.format(threads, clients_num))
+		exit(1)
 	_host = 'host'
-	ops = ''
 	hostname = run('hostname -s')
 	if action not in ['load','run']:
 		print('Bad action, {0}'.format(action))
 		return None
-	contact = random.choice(env.roledefs['servers'])
-	if db == 'cassandra':
+	contact = COORDINATOR
+	if db in ['cassandra', 'infinispan']:
 		_host += 's'
 		contact = NODE_LIST
 	elif db == 'redis':
@@ -227,7 +227,7 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 			if recordcount is None:
 				print('recordcount required when clients number > 1')
 				return None
-			idx = int(hostname[-2:])
+			idx = int(env.roledefs['clients'].index(hostname)) + 1
 			delta = int(recordcount)/clients_num
 			insertstart = (idx-1)*delta
 			insertcount = delta
@@ -245,7 +245,12 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 		target = int(target)
 		ops = ops + " -target {0}".format(target/clients_num)
 	ops = ops + " -threads {0}".format(threads/clients_num)
-	with settings(warn_only=True, combine_stderr=False):
+
+	#!! remove
+	if db == 'redis':
+		 ops = ops + " -p redis.port=7000"
+
+	with settings(hide('warnings', 'running'), warn_only=True, combine_stderr=False):
 		run('[ ! -d {0} ] && mkdir -p {0}'.format(WORKSHOP))
 		with cd(WORKSHOP):
 			run('ycsb {0} {1} -P ../workloads/{2} -p {3}={4} {5} -s > {6}'.format(action, db, workload, _host, contact, ops, log_file))
@@ -254,7 +259,7 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 			return run('get_sum {0}'.format(log_file))
 
 @parallel
-def run_test(action, workload='a', runtime=10, threads=50, target=None, recordcount=5000000, mark='default', flag=None, save='true'):
+def run_test(action, workload='a', runtime=10, threads=50, target=None, recordcount=5000000, mark='default', flag=None, save='true', ops=''):
 	runtime=int(float(runtime)*60)
 	workload = 'workload'+workload
 	if DB == 'default':
@@ -330,16 +335,19 @@ def run_test(action, workload='a', runtime=10, threads=50, target=None, recordco
 		for rec in ret:
 			rec[2] = '{0:.2f}'.format(rec[2])
 			print '\t'.join(rec)
-		if save == 'true' and ret:
+		if save == 'true' and len(ret)>0:
 			fil = LOGS_HOME+'/'+mark+'/'+workload+'.out'
-			try:
-				with open(fil, 'w') as f:
-					f.writelines(map(lambda x: '\t'.join(x)+'\n', ret))
-					print("Saved as "+fil)
-			except IOError, e:
-				print(e)
+			with open(fil, 'w') as f:
+				f.writelines(map(lambda x: '\t'.join(x)+'\n', ret))
+				print("Saved as "+fil)
 
-	out = execute(ycsb, action, workload=workload, mark=mark, threads=threads, target=target, recordcount=recordcount, runtime=runtime, flag=flag)
+			fil = LOGS_HOME+'/'+mark+'/'+ 'cluster.info.out'
+			try:
+				execute(db_info, DB, fil=fil)
+			except Exception, e:
+				print(e)
+	
+	out = execute(ycsb, action, workload=workload, mark=mark, threads=threads, target=target, recordcount=recordcount, runtime=runtime, flag=flag, ops=ops)
 	ret = aggregate()
 	pretty_print(ret)
 
@@ -351,11 +359,11 @@ def get_log(action,mark):
 		get(log_file, LOGS_HOME)
 			
 @roles('clients')
-def kill(force=False):
-	"""Kills YCSB processes"""
-	with settings(warn_only=True):
-		run('ps -f -C java')
-		run('killall java')
+def kill(proc='java', force=False):
+	"""Kills processes"""
+	with settings(hide('warnings'), warn_only=True):
+		run('ps -f -C '+proc)
+		run('killall '+proc)
 		#if force or confirm(red("Do you want to kill Java on the client?")):
 		#	run('killall java')
 
@@ -432,9 +440,79 @@ def stress(action='run', n=5000000, threads=50, mark='stress', flag=None):
 			get('out/{0}'.format(log_file), local_dir)
 		local('cat {0}/{1}'.format(local_dir, log_file))
 
+#### DB Operation ####
+@parallel
+#@roles('servers')
+def cleanup(db='aerospike'):
+	with settings(hide('warnings'), warn_only=True, combine_stderr=False):
+		if db == 'redis':
+			run('pkill -9 redis-server')
+		else:
+			run('service {0} stop'.format(db))
+		run('rm -rf /local/data/{0}*'.format(db))
+
 @parallel
 @roles('servers')
-def cleanup(db='aerospike'):
-	with settings(warn_only=True, combine_stderr=False):
-		run('service {0} stop'.format(db))
-		run('rm -rf /local/data/{0}/*'.format(db))
+def recordcount(db, redis_port=6379):
+	with settings(hide('everything')):
+		if db == 'infinispan':
+			cmd = "printf 'connect\ncontainer clustered\ncache default\nstats\n' | ispn-cli | grep numberOfEntries"
+			out = run(cmd)
+			return out.split(':')[-1].strip()
+		elif db == 'redis':
+			cmd = "printf 'dbsize\n' | redis-cli -p {0}".format(redis_port)
+			out = run(cmd)
+			return out.split()[-1].strip()
+
+@hosts(COORDINATOR)
+def cluster_info(db, redis_port=6379):
+	with settings(hide('everything')):
+		cmd = None
+		if db == 'infinispan':
+			cmd = "printf 'connect\ncontainer clustered\ncache default\nstats\n' | ispn-cli"
+		elif db == 'redis':
+			cmd = "printf 'cluster nodes\ninfo\n' | redis-cli -p {0}".format(redis_port)
+		elif db == 'aerospike':
+			cmd = "printf 'info\n' | asmonitor"
+		if cmd is not None:
+			return run(cmd)
+
+@runs_once
+def db_info(db, redis_port='7000:7001', fil=None):
+	strn = []
+	inst_count = [0]
+	def get_recordcount(_port=6379):
+		_count = 0
+		cnt = execute(recordcount, db, _port)
+		for k,v in cnt.items():
+			if db == 'redis':
+				strn.append('  [{0}:{2}]: {1}'.format(k,v, _port))
+			else:
+				strn.append('  {0}: {1}'.format(k,v))
+			if v is not None:
+				_count += int(v)
+			inst_count[0] += 1
+		return _count
+	with settings(hide('everything')):
+		strn.append('Cluster info:')
+		cls = execute(cluster_info, db, redis_port.split(':')[0])
+		strn.append(cls.values()[0])
+
+		strn.append('\nRecord Distribution:')
+		count = 0
+		if db == 'redis':
+			for p in redis_port.split(':'):
+				count += get_recordcount(p)
+		elif db == 'infinispan':
+			count += get_recordcount()
+
+		if db in ('redis', 'infinispan'):
+			strn.append('Record Count: {0}'.format(count))
+			strn.append('Active instances: {0}'.format(inst_count[0]))
+		strn = '\n'.join(strn)
+		if fil is None:
+			print(strn)
+		else:
+			with open(fil, 'w') as f:
+				f.write(strn)
+				print("Saved as "+fil)

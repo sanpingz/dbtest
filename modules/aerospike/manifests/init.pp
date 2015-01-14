@@ -2,7 +2,7 @@ class aerospike {
 	case $operatingsystem {
 		centos, redhat: {
 			$service = 'aerospike'
-			$zip_file = 'aerospike.tgz'
+			#$zip_file = 'aerospike.tgz'
 			$conf_home = '/local/conf'
 			$apps_home = '/local/apps'
 			$data_home = '/local/data'

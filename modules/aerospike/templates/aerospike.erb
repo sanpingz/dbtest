@@ -1,5 +1,5 @@
 <%# aerospike.conf %>
-<%- if @ipaddress_eth0 =~ /^37\.6\.2\.(\d+)$/ -%>
+<%- if @ipaddress_eth0 =~ /^192\.168\.(\d+)\.(\d+)$/ -%>
 <%- int_ip = @ipaddress_eth0 -%>
 <%- else -%>
 <%- int_ip = @ipaddress_eth1 -%>
@@ -47,33 +47,23 @@ network {
 		port 3002
 		address <%= int_ip %> 
 
-		# 37.6.2.31  node01
-		# 37.6.2.32  node02
-		# 37.6.2.33  node03
-		# 37.6.2.34  node04
-		# 37.6.2.51  node21 
-		# 37.6.2.52  node22 
+		# 192.168.0.42  node01
+		# 192.168.0.15  node02
+		# 192.168.0.50  node03
+		# 192.168.0.17  node04
 
-<%- if @hostname != "node21" and  @hostname != "node22" -%>
 		<%- if @hostname != "node01" -%>
-		mesh-seed-address-port 37.6.2.31 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 192.168.0.42 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node02" -%>
-		mesh-seed-address-port 37.6.2.32 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 192.168.0.15 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node03" -%>
-		mesh-seed-address-port 37.6.2.33 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 192.168.0.50 3002 # IP address for seed node in the cluster
 		<%- end -%>
 		<%- if @hostname != "node04" -%>
-		mesh-seed-address-port 37.6.2.34 3002 # IP address for seed node in the cluster
+		mesh-seed-address-port 192.168.0.17 3002 # IP address for seed node in the cluster
 		<%- end -%>
-<%- else -%>
-		<%- if @hostname == "node21" -%>
-		mesh-seed-address-port 37.6.2.52 3002 # IP address for seed node in the cluster
-		<%- else -%>
-		mesh-seed-address-port 37.6.2.51 3002 # IP address for seed node in the cluster
-		<%- end -%>
-<%- end -%>
 
 		interval 150
 		timeout 20
@@ -88,33 +78,23 @@ network {
 	}
 }
 
-<%- if @hostname != "node21" and  @hostname != "node22" -%>
-namespace state {
+namespace usertable {
 	replication-factor 3
-	memory-size 30G
-	high-water-memory-pct 90 # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
-	stop-writes-pct 90       # Stop writes if capacity exceeds 90% of memory-size
-	default-ttl 0 # 30 days, use 0 to never expire/evict.
-	high-water-disk-pct 90
-#	storage-engine memory
-	storage-engine device {                # Configure the storage-engine to use persistence.
-		write-block-size 1M
-		defrag-lwm-pct 25
-		file /local/data/aerospike/data.1  # Location of data file on server.
-		filesize 100G                       # Max size of each file in GB.
-		data-in-memory true                # Indicates that all data should also be in memory.
-	}
-}
-<%- else -%>
-namespace checkpoint {
-	replication-factor 2
-	memory-size 8G
-	high-water-memory-pct 80 # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
-	stop-writes-pct 90       # Stop writes if capacity exceeds 90% of memory-size
-	default-ttl 0 # 30 days, use 0 to never expire/evict.
+	memory-size 28G
+	high-water-memory-pct 85   # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
+	stop-writes-pct 80         # Stop writes if capacity exceeds 90% of memory-size
+	high-water-disk-pct 85
+	default-ttl 0              # 30 days, use 0 to never expire/evict.
 	storage-engine memory
+#	storage-engine device {                    # Configure the storage-engine to use persistence.
+#		max-write-cache 128M
+#		write-block-size 1M
+#		defrag-lwm-pct 25
+#		file /local/data/aerospike/data.dat    # Location of data file on server.
+#		filesize 100G                          # Max size of each file in GB.
+#		data-in-memory true                    # Indicates that all data should also be in memory.
+#	}
 }
-<%- end -%>
 
 #namespace test {
 #	replication-factor 2

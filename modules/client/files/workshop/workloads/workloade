@@ -1,41 +1,41 @@
 ## Yahoo! Cloud System Benchmark
 
 ## Aerospike
-ns=state
-set=session
+ns=usertable
+set=data
 
 ## Cassandra
-table=state
-cassandra.columnfamily=session
+table=usertable
+cassandra.columnfamily=data
 cassandra.readconsistencylevel=QUORUM
 cassandra.writeconsistencylevel=QUORUM
 cassandra.scanconsistencylevel=QUORUM
 cassandra.deleteconsistencylevel=QUORUM
 
 ## Common
-fieldcount=1
-fieldlength=10000
+fieldcount=10
+fieldlength=100
 fieldnameprefix=field
 
 threadcount=50
-target=16700
+target=0
 
-recordcount=600000
+readproportion=1.0
+updateproportion=0
+scanproportion=0
+insertproportion=0
+deleteproportion=0
+readmodifywriteproportion=0
+
+recordcount=4000000
 operationcount=1000000000000000000
 maxexecutiontime=600
 
 readallfields=true
 writeallfields=true
 
-readproportion=0
-updateproportion=0.50
-scanproportion=0
-insertproportion=0
-deleteproportion=0.50
-readmodifywriteproportion=0
-
 workload=com.yahoo.ycsb.workloads.CoreWorkload
-##  uniform, zipfian or latest
+##  uniform, zipfian, latest or uniquerandom
 requestdistribution=zipfian
 ## Default: histogram. Options: histogram, timeseries
 measurementtype=histogram
