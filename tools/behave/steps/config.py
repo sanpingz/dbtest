@@ -3,14 +3,15 @@ from time import sleep
 from subprocess import Popen, PIPE, STDOUT, call
 
 DB = 'aerospike'
-MARK_PREFIX = 'bld'
+MARK_PREFIX = 'baseline'
+
 LOG_FILE = r'/local/logs/out.log'
 LOG_HOME = r'/local/logs'
 
 
 SMP = 10
 LOAD_THREADS = 200
-REDIS_TRIB = '/home/andy/redis-trib'
+REDIS_TRIB = '/local/tool/redis-trib'
 
 PROCS = {
 	'aerospike': 'asd',
@@ -19,90 +20,12 @@ PROCS = {
 	'cassandra': 'java'
 }
 
-WARMUPS = {
-	'aerospike': 0.05,
-	'redis': 1.7,
-	'infinispan': 0.05,
-	'cassandra': 0.05
-}
-
-MAX_TPS = {
-	'aerospike': {
-		'1k': {
-			'1k_r100': 500000,
-			'1k_r50w50': 500000,
-			'1k_w100': 500000
-		},
-		'5k': {
-			'5k_r100': 250000,
-			'5k_r50w50': 250000,
-			'5k_w100': 250000
-		},
-		'32k': {
-			'32k_r100': 50000,
-			'32k_r50w50': 50000,
-			'32k_w100': 50000
-		}
-	},
-	'redis' : {
-		'1k': {
-			'1k_r100': 500000,
-			'1k_r50w50': 500000,
-			'1k_w100': 500000
-		},
-		'5k': {
-			'5k_r100': 250000,
-			'5k_r50w50': 250000,
-			'5k_w100': 250000
-		},
-		'32k': {
-			'32k_r100': 50000,
-			'32k_r50w50': 50000,
-			'32k_w100': 50000
-		}
-	},
-	'infinispan': {
-		'1k': {
-			'1k_r100': 500000,
-			'1k_r50w50': 100000,
-			'1k_w100': 50000
-		},
-		'5k': {
-			'5k_r100': 250000,
-			'5k_r50w50': 50000,
-			'5k_w100': 50000
-		},
-		'32k': {
-			'32k_r100': 50000,
-			'32k_r50w50': 10000,
-			'32k_w100': 10000
-		}
-	},
-	'cassandra': {
-		'1k': {
-			'1k_r100': 500000,
-			'1k_r50w50': 100000,
-			'1k_w100': 100000
-		},
-		'5k': {
-			'5k_r100': 250000,
-			'5k_r50w50': 50000,
-			'5k_w100': 50000
-		},
-		'32k': {
-			'32k_r100': 50000,
-			'32k_r50w50': 10000,
-			'32k_w100': 10000
-		}
-	}
-}
-
 CONFIG = {
 	'db': DB,
 	'action': 'run',
 	'workload': 'a',
 	'recordcount': 4000000,
-	'runtime': 3,
+	'runtime': 5,
 	'threads': 400,
 	'target': 0,
 	'mark': 'baseline',
@@ -110,6 +33,13 @@ CONFIG = {
 	'proc': PROCS[DB],
 	'nic': 'eth0',
 	'device': 'vda2',
+}
+
+WARMUPS = {
+	'aerospike': 0.05,
+	'redis': 1.7,
+	'infinispan': 0.05,
+	'cassandra': 0.05
 }
 
 CMDS = [
@@ -151,7 +81,7 @@ def run_test(config):
 				if count > timeout:
 					try: 
 						if p[2] == 'run_test':
-							call('fab kill -R clients', shell=True)
+							call('fab kill:proc=java -R clients', shell=True)
 						else:
 							p[0].kill()
 					except OSError,e:
