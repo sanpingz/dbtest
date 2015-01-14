@@ -8,7 +8,7 @@ class cassandra {
 			$apps_home = '/local/apps'
 			$data_home = '/local/data'
 			$dist_home = '/local/dist'
-			$tool_home = '/local/tools'
+			$tools_home = '/local/tools'
 			$files_home = "puppet:///modules/$service"
 			$extra_home = 'puppet:///extra_files'
 			$KS = 'state'
@@ -21,27 +21,41 @@ class cassandra {
 		ensure => file,
 		source => "$files_home/$service"
 	}
-	file { "/etc/security/limits.conf":
-		mode => 644,
-		owner => root,
-		group => root,
-		ensure => file,
-		source => "$files_home/limits.conf"
-	}
-	file { "/etc/security/limits.d/90-nproc.conf":
-		mode => 644,
-		owner => root,
-		group => root,
-		ensure => file,
-		source => "$files_home/90-nproc.conf"
-	}
-	file { "/etc/sysctl.conf":
-		mode => 644,
-		owner => root,
-		group => root,
-		ensure => file,
-		source => "$files_home/sysctl.conf"
-	}
+#	file { "/etc/security/limits.conf":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		ensure => file,
+#		source => "$files_home/limits.conf"
+#	}
+#	file { "/etc/security/limits.d/90-nproc.conf":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		ensure => file,
+#		source => "$files_home/90-nproc.conf"
+#	}
+#	file { "/etc/sysctl.conf":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		ensure => file,
+#		source => "$files_home/sysctl.conf"
+#	}
+#	file { "$tools_home/lib":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		ensure => directory,
+#	}
+#	file { "$jna_jar":
+#		mode => 644,
+#		owner => root,
+#		group => root,
+#		path => "$tools_home/lib/${jna_jar}",
+#		ensure => file,
+#		source => "$extra_home/files/${jna_jar}",
+#	}
 	file { "$data_home/$service":
 		mode => 644,
 		owner => root,
@@ -71,14 +85,6 @@ class cassandra {
 		source => "$extra_home/files/${zip_file}",
 		notify => Exec["reinstall_$service"],
 	}
-	file { "$jna_jar":
-		mode => 644,
-		owner => root,
-		group => root,
-		path => "$tool_home/lib/${jna_jar}",
-		ensure => file,
-		source => "$extra_home/files/${jna_jar}",
-	}
 	exec { "reinstall_$service":
 		cwd => "$apps_home",
 		path => '/usr/bin:/bin',
@@ -98,9 +104,9 @@ class cassandra {
 		enable => false,
 		subscribe => File["$conf_home/$service"],
 	}
-	service { 'datastax-agent':
-		name => 'datastax-agent',
-		ensure => running,
-		enable => true,
-	}
+#	service { 'datastax-agent':
+#		name => 'datastax-agent',
+#		ensure => running,
+#		enable => true,
+#	}
 }

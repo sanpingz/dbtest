@@ -103,4 +103,10 @@ class basic {
 		group => root,
 		ensure => directory,
 	}
+	file { '/local/tools':
+		mode => 644,
+		owner => root,
+		group => root,
+		ensure => directory,
+	}
 }
