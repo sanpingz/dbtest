@@ -1,41 +1,33 @@
 ## Yahoo! Cloud System Benchmark
 
 ## Aerospike
-aerospike.generationpolicy=GT
-ns=state
-set=assign
+ns=usertable
+set=data
 
 ## Cassandra
-table=state
-cassandra.columnfamily=assign
+table=usertable
+cassandra.columnfamily=data
 cassandra.readconsistencylevel=QUORUM
 cassandra.writeconsistencylevel=QUORUM
 cassandra.scanconsistencylevel=QUORUM
 cassandra.deleteconsistencylevel=QUORUM
 
 ## Common
-fieldcount=1
-fieldlength=32000
+fieldcount=10
+fieldlength=100
 fieldnameprefix=field
 
 threadcount=50
-#target=9444
+target=0
 
-#readproportion=0
-#updateproportion=0.64
-#scanproportion=0
-#insertproportion=0
-#deleteproportion=0.36
-#readmodifywriteproportion=0
-
-readproportion=0.5
-updateproportion=0.5
+readproportion=0.50
+updateproportion=0.50
 scanproportion=0
 insertproportion=0
 deleteproportion=0
 readmodifywriteproportion=0
 
-recordcount=5000000
+recordcount=4000000
 operationcount=1000000000000000000
 maxexecutiontime=600
 

@@ -20,8 +20,8 @@ fieldnameprefix=field
 threadcount=50
 target=0
 
-readproportion=1.0
-updateproportion=0
+readproportion=0.50
+updateproportion=0.50
 scanproportion=0
 insertproportion=0
 deleteproportion=0

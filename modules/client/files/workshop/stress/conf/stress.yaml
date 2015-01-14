@@ -14,7 +14,7 @@
 #
 # Keyspace info
 #
-keyspace: state
+keyspace: usetable
 
 #
 # The CQL for creating a keyspace (optional if it already exists)
@@ -25,13 +25,13 @@ keyspace_definition: |
 #
 # Table info
 #
-table: reg
+table: data
 
 #
 # The CQL for creating a table you wish to stress (optional if it already exists)
 #
 table_definition: |
-  CREATE TABLE reg (
+  CREATE TABLE data (
         skey blob,
         value blob,
         PRIMARY KEY(skey)
@@ -82,6 +82,6 @@ insert:
 # A list of queries you wish to run against the schema
 #
 queries:
-   read: select * from reg where skey = ? LIMIT 1
-   delete: delete from reg where skey = ?
+   read: select * from data where skey = ? LIMIT 1
+   delete: delete from data where skey = ?
    # range1: select * from typestest where name = ? and choice = ? and date >= ? LIMIT 100

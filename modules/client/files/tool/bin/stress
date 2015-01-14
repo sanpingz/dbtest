@@ -11,7 +11,7 @@ DATE=$(date "+%m%d%H%M%S")
 MARK=""
 
 NODES="node01,node02,node03,node04,node05,node06,node07,node08,node09,node10,node11,node12,node13,node14,node15,node16,node17,node18,node19,node20"
-CONF="stress_reg.yaml"
+CONF="stress.yaml"
 N=${NUM:-625000}
 
 [ ! -f $ROOT/conf/$CONF ] && echo "$ROOT/conf/$CONF not exist" && exit 1
