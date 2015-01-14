@@ -191,7 +191,10 @@
                 <transport type="TCP" socket-binding="jgroups-tcp"/>
                 <protocol type="TCPPING">
                     <!--<property name="max_dynamic_hosts">20</property>-->
+					<!--
                     <property name="initial_hosts">node01[7600],node02[7600],node03[7600],node04[7600],node05[7600],node06[7600],node07[7600],node08[7600],node09[7600],node10[7600],node11[7600],node12[7600],node13[7600],node14[7600],node15[7600],node16[7600],node17[7600],node18[7600],node19[7600],node20[7600]</property>
+					-->
+                    <property name="initial_hosts">node10[7600],node11[7600],node12[7600],node13[7600],node14[7600],node15[7600]</property>
                 </protocol>
                 <!--<protocol type="MPING" socket-binding="jgroups-mping"/>-->
                 <protocol type="MERGE3"/>

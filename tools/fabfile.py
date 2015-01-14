@@ -18,11 +18,13 @@ DBS = ["{0}{1:02}".format('node',x) for x in range(1, 24+1)]
 
 env.roledefs = {
 	#list of client hosts
-	'clients': CLIENTS[:8],
+	'clients': CLIENTS[:2],
+	'ispn_clients': CLIENTS[-2:],
 	'all_clients': CLIENTS,
 	#list of DB server hosts
-	'servers': DBS[:18],
-	'servers': DBS,
+	'servers': DBS[:6],
+	'ispn_servers': DBS[9:15],
+	'all_servers': DBS,
 	#list of all available hosts
 	'all_hosts': CLIENTS + DBS,
 }

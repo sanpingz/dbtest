@@ -24,14 +24,6 @@ class client {
 		purge => true,
 		recurse => true,
 	}
-	file { "$tools_home":
-		mode => 755,
-		owner => root,
-		group => root,
-		source => "$files_home/tools",
-		purge => true,
-		recurse => true,
-	}
 	file { "$ycsb_pkg":
 		mode => 644,
 		owner => root,
