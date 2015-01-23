@@ -9,7 +9,7 @@ record=${6:-"4000000"}
 RUNTIME=${7:-"10"}
 
 SAVE=true
-target=0
+target=30000
 NIC='eth0'
 DEVICE='vda2'
 

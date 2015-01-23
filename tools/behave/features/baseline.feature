@@ -9,7 +9,7 @@ Feature: Baseline testing
 	@1k
 	Scenario: 1k record size testing
 		Given cluster is ready
-		When load data into cluster
+		When load "4000000" records into cluster with "w100"
 		Then run the baseline cases
 			|workload	|
 			|1k_r100	|
@@ -19,7 +19,7 @@ Feature: Baseline testing
 	@5k
 	Scenario: 5k record size testing
 		Given cluster is ready
-		When load data into cluster
+		When load "4000000" records into cluster with "w100"
 		Then run the baseline cases
 			|workload	|
 			|5k_r100	|
@@ -29,7 +29,7 @@ Feature: Baseline testing
 	@32k
 	Scenario: 32k record size testing
 		Given cluster is ready
-		When load data into cluster
+		When load "4000000" records into cluster with "w100"
 		Then run the baseline cases
 			|workload	|
 			|32k_r100	|
