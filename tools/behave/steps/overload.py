@@ -11,7 +11,6 @@ register_type(Float=parse_float)
 @then('capacity overload "{runtime:Integer}" mins with read "{rworkload}" and insert "{iworkload}" based on "{recordcount:Integer}" records')
 def step_impl(context, runtime, rworkload, iworkload, recordcount):
 	mark_t = 'capacity'
-	sleep_time = runtime/6*60
 	config = {}
 	config.update(CONFIG)
 	case = list(set(RECORD_SIZES) & context.tags)
@@ -21,6 +20,8 @@ def step_impl(context, runtime, rworkload, iworkload, recordcount):
 	config['threads'] /= 2
 
 	steps_list = map(unicode.strip, context.text.split('\n'))
+	sleep_time = runtime/len(steps_list)*60
+	mark_t += '_' + str(len(steps_list)-2)
 
 	def insert_func(context, sleep_time):
 		print(' '*4 + steps_list[1])
@@ -33,7 +34,7 @@ def step_impl(context, runtime, rworkload, iworkload, recordcount):
 
 	def read_func(context, sleep_time):
 		config['recordcount'] = recordcount
-		config['runtime'] = runtime - sleep_time/60
+		config['runtime'] = runtime - 2*sleep_time/60
 		config['workload'] = case + '_' + iworkload
 		config['mark'] = context.mark + '_' + mark_t + '_' + iworkload
 		sleep_status(sleep_time)

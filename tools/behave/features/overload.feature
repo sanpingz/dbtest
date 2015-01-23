@@ -5,6 +5,19 @@ Feature: Overload testing
 		Given stop cluster
 		and clean disk
 		and start cluster
+	@5k
+	@capacity
+	@simple
+	@memory
+	Scenario: capacity overload
+		Given cluster is ready
+		When load "2000000" records into cluster with "r50w50"
+		Then capacity overload "30" mins with read "r50w50" and insert "i100" based on "2000000000" records
+			"""
+			keep "100%" traffic running "60" mins with "r50w50"
+			load "2000000000" records into cluster with "i100"
+			grow "node05" instances
+			"""
 
 	@5k
 	@capacity
