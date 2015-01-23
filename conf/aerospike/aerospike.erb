@@ -1,5 +1,5 @@
 <%# aerospike.conf %>
-<%- if @ipaddress_eth0 =~ /^37\.6\.2\.(\d+)\.(\d+)$/ -%>
+<%- if @ipaddress_eth0 =~ /^37\.6\.2\.(\d+)$/ -%>
 <%- int_ip = @ipaddress_eth0 -%>
 <%- else -%>
 <%- int_ip = @ipaddress_eth1 -%>
@@ -80,11 +80,13 @@ network {
 
 namespace usertable {
 	replication-factor 2
-	memory-size 28G
-	high-water-memory-pct 85   # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
+	memory-size 12G
+	high-water-memory-pct 90   # Evict non-zero TTL data if capacity exceeds # 60% of memory-size
 	stop-writes-pct 80         # Stop writes if capacity exceeds 90% of memory-size
-	high-water-disk-pct 85
+	high-water-disk-pct 80
 	default-ttl 0              # 30 days, use 0 to never expire/evict.
+#	read-consistency-level-override off         # off, one, all. default: off (one)
+#	write-commit-level-override master             # off, all, master. default: off (all)
 	storage-engine memory
 #	storage-engine device {                    # Configure the storage-engine to use persistence.
 #		max-write-cache 128M

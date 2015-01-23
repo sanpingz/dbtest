@@ -2,7 +2,7 @@
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 
 192.30.252.130	github.com
-37.6.2.13       puppet puppet.openstacklocal ntpserver
+37.6.2.20       puppet puppet.openstacklocal ntpserver
 37.6.2.14       base base.openstacklocal
 
 37.6.2.16 client01 client01.openstacklocal

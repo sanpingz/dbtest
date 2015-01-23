@@ -13,7 +13,7 @@ node /^client\d{2}\.openstacklocal$/ {
 	include client
 }
 
-node /^node0\d{1}\.openstacklocal$/ {
+node /^node\d{2}\.openstacklocal$/ {
 	include basic
 	include server
 	include aerospike
@@ -23,12 +23,3 @@ node /^node0\d{1}\.openstacklocal$/ {
 	#include cassandra
 }
 
-node /^node1\d{1}\.openstacklocal$/ {
-	include basic
-	include server
-	#include aerospike
-	include infinispan
-	#include redis
-	#include redispair
-	#include cassandra
-}

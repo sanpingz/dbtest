@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import re
+
+if __name__ == '__main__':
+	fil = sys.argv[1]
+	kw = None
+	if len(sys.argv) > 2:
+		kw = sys.argv[2]
+	assert os.path.isfile(fil)
+	with open(fil, 'r') as f:
+		while True:
+			line = f.readline()
+			if not line:
+				break
+			if not re.search(kw, line):
+				continue
+			fd = re.findall('\d+\.?\d*', line)
+			if fd:
+				print('\t'.join(fd))

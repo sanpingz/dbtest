@@ -5,6 +5,11 @@ import re, os, json, random
 from hashlib import md5 as hash
 
 DB = env.get('db') or 'default'
+CC = env.get('cc') or 2
+SC = env.get('sc') or 4
+
+MAX_CC = 10
+MAX_SC = 24
 if env.get('pw'):
 	env.password = env.get('pw')
 
@@ -13,20 +18,37 @@ LOGS_HOME = '/local/logs/{0}'.format(DB)
 MONITOR_HOME = '/tmp/{0}'.format(DB)
 TOOLS_HOME = '/local/tools'
 
-CLIENTS = ["{0}{1:02}".format('client',x) for x in range(1, 10+1)]
-DBS = ["{0}{1:02}".format('node',x) for x in range(1, 24+1)]
+CLIENTS = ["{0}{1:02}".format('client',x) for x in range(1, MAX_CC+1)]
+SERVERS = ["{0}{1:02}".format('node',x) for x in range(1, MAX_SC+1)]
+
+## specify a clients index list by cdx
+CCList = []
+if env.get('cdx'):
+	for idx in eval(env.get('cdx')):
+		assert idx < MAX_CC
+		CCList.append(CLIENTS[idx-1])
+## specify a servers index list by sdx
+SCList = []
+if env.get('sdx'):
+	for idx in eval(env.get('sdx')):
+		assert idx < MAX_SC
+		SCList.append(SERVERS[idx-1])
+
+CC = int(CC)
+SC = int(SC)
+assert MAX_CC >= CC and MAX_SC >= SC
 
 env.roledefs = {
 	#list of client hosts
-	'clients': CLIENTS[:2],
+	'clients': CCList if CCList else CLIENTS[:CC],
 	'ispn_clients': CLIENTS[-2:],
 	'all_clients': CLIENTS,
 	#list of DB server hosts
-	'servers': DBS[:6],
-	'ispn_servers': DBS[9:15],
-	'all_servers': DBS,
+	'servers': SCList if SCList else SERVERS[:SC],
+	'ispn_servers': SERVERS[9:13],
+	'all_servers': SERVERS,
 	#list of all available hosts
-	'all_hosts': CLIENTS + DBS,
+	'all_hosts': CLIENTS + SERVERS,
 }
 
 NODE_LIST = ",".join(env.roledefs['servers'])
@@ -81,6 +103,7 @@ def deploy_as():
 	dist_home = '/local/dist'
 	files_home = '/local/puppet/files'
 	with settings(hide('warnings'), warn_only=True, combine_stderr=False):
+		run('[ ! -d {0} ] && mkdir -p {0}'.format(dist_home, dist_home))
 		put('{0}/{1}'.format(files_home,pkg), dist_home)
 		run('rm -rf /tmp/*{0}*'.format(service))
 		run('tar -zxvf {0}/{1} -C /tmp/'.format(dist_home,pkg))
@@ -121,7 +144,7 @@ def monitor(mark, proc='asd', nic='eth0', device='vda2', duration=1):
 @runs_once
 #@parallel
 #@roles('servers')
-def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1, save='true'):
+def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1, save='false'):
 	data = {}
 	ret = None
 	unit = {}
@@ -151,14 +174,11 @@ def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1,
 			data[k] = json.loads(str(v))
 		except ValueError, e:
 			print(e)
-			exit(1)
 
-	def cmm(prev, curr):
-		return {
-				'avg': prev.get('avg')+curr.get('avg'),
-				'max': max(prev.get('max'), curr.get('max')),
-				'min': min(prev.get('min'), curr.get('min'))
-		}
+	def amm_handler(prev, curr):
+		prev['avg'] += curr.get('avg')
+		prev['max'] = max(prev.get('max'), curr.get('max'))
+		prev['min'] = min(prev.get('min'), curr.get('min'))
 	def pretty_print():
 		prt = []
 		prt.append('%CPU\navg\tmax\tmin\n{avg:.2f}\t{max:.2f}\t{min:.2f}'.format(**ret['cpu']))
@@ -176,15 +196,17 @@ def monitorit(mark='monitor', proc='asd', nic='eth0', device='vda2', duration=1,
 				print("Saved as " + fil)
 
 	for k,v in data.items():
-		ret = ret or v
+		if ret is None:
+			ret = v
+			continue
 		unit['disk'] =  unit.get('disk') or v['disk']['unit']
 		unit['net'] =  unit.get('net') or v['net']['unit']
-		ret['cpu'] = cmm(ret['cpu'], v['cpu'])
-		ret['mem'] = cmm(ret['mem'], v['mem'])
-		ret['disk']['read'] = cmm(ret['disk']['read'], v['disk']['read'])
-		ret['disk']['write'] = cmm(ret['disk']['write'], v['disk']['write'])
-		ret['net']['sent'] = cmm(ret['net']['sent'], v['net']['sent'])
-		ret['net']['recv'] = cmm(ret['net']['recv'], v['net']['recv'])
+		amm_handler(ret['cpu'], v['cpu'])
+		amm_handler(ret['mem'], v['mem'])
+		amm_handler(ret['disk']['read'], v['disk']['read'])
+		amm_handler(ret['disk']['write'], v['disk']['write'])
+		amm_handler(ret['net']['sent'], v['net']['sent'])
+		amm_handler(ret['net']['recv'], v['net']['recv'])
 	s = len(data)
 	ret['cpu']['avg'] /= s
 	ret['mem']['avg'] /= s
@@ -250,7 +272,7 @@ def ycsb(action, workload='workloada', db=DB, mark='default', target=None, threa
 	with settings(hide('warnings', 'running'), warn_only=True, combine_stderr=False):
 		run('[ ! -d {0} ] && mkdir -p {0}'.format(WORKSHOP))
 		with cd(WORKSHOP):
-			run('ycsb {0} {1} -P ../workloads/{2} -p {3}={4} {5} -s > {6}'.format(action, db, workload, _host, contact, ops, log_file))
+			run('ycsb {0} {1} -P ../workloads/{2} -p {3}={4} {5} -s > {6} 2>&1'.format(action, db, workload, _host, contact, ops, log_file))
 			get(log_file, local_log)
 			#return local('ycsb_sum {0}'.format(local_log))
 			return run('ycsb_sum {0}'.format(log_file))
@@ -333,16 +355,15 @@ def run_test(action, workload='a', runtime=10, threads=50, target=None, recordco
 			rec[2] = '{0:.2f}'.format(rec[2])
 			print '\t'.join(rec)
 		if save == 'true' and len(ret)>0:
-			fil = LOGS_HOME+'/'+mark+'/'+workload+'.out'
+			try:
+				execute(db_info, DB, fil=LOGS_HOME + '/' + mark + '/' + 'cluster.info.out')
+			except Exception, e:
+				print(e)
+
+			fil = LOGS_HOME + '/' + mark + '/' + workload+'.out'
 			with open(fil, 'w') as f:
 				f.writelines(map(lambda x: '\t'.join(x)+'\n', ret))
 				print("Saved as "+fil)
-
-			fil = LOGS_HOME+'/'+mark+'/'+ 'cluster.info.out'
-			try:
-				execute(db_info, DB, fil=fil)
-			except Exception, e:
-				print(e)
 	
 	out = execute(ycsb, action, workload=workload, mark=mark, threads=threads, target=target, recordcount=recordcount, runtime=runtime, flag=flag, ops=ops)
 	ret = aggregate()
@@ -355,7 +376,7 @@ def get_log(action,mark):
 	with cd(WORKSHOP):
 		get(log_file, LOGS_HOME)
 			
-@roles('clients')
+#@roles('clients')
 def kill(proc='java', force=False):
 	"""Kills processes"""
 	with settings(hide('warnings'), warn_only=True):
@@ -471,7 +492,7 @@ def cluster_info(db, redis_port=6379):
 		if db == 'infinispan':
 			cmd = "printf 'connect\ncontainer clustered\ncache default\nstats\n' | ispn-cli"
 		elif db == 'redis':
-			cmd = "printf 'cluster nodes\ninfo\n' | redis-cli -p {0}".format(redis_port)
+			cmd = "printf 'cluster nodes\cluster info\ninfo\n' | redis-cli -p {0}".format(redis_port)
 		elif db == 'aerospike':
 			cmd = "printf 'info\n' | asmonitor"
 		if cmd is not None:
@@ -490,7 +511,10 @@ def db_info(db, redis_port='6379:6380', fil=None):
 			else:
 				strn.append('  {0}: {1}'.format(k,v))
 			if v is not None:
-				_count += int(v)
+				try:
+					_count += int(v)
+				except ValueError, e:
+					print(e)
 			inst_count[0] += 1
 		return _count
 	with settings(hide('everything')):
@@ -509,10 +533,8 @@ def db_info(db, redis_port='6379:6380', fil=None):
 		if db in ('redis', 'infinispan'):
 			strn.append('Record Count: {0}'.format(count))
 			strn.append('Active instances: {0}'.format(inst_count[0]))
-		strn = '\n'.join(strn)
-		if fil is None:
-			print(strn)
-		else:
+		print('\n'.join(strn))
+		if fil is not None:
 			with open(fil, 'w') as f:
-				f.write(strn)
+				f.writelines(strn)
 				print("Saved as "+fil)
