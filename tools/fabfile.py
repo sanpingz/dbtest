@@ -41,11 +41,9 @@ assert MAX_CC >= CC and MAX_SC >= SC
 env.roledefs = {
 	#list of client hosts
 	'clients': CCList if CCList else CLIENTS[:CC],
-	'ispn_clients': CLIENTS[-2:],
 	'all_clients': CLIENTS,
 	#list of DB server hosts
 	'servers': SCList if SCList else SERVERS[:SC],
-	'ispn_servers': SERVERS[9:13],
 	'all_servers': SERVERS,
 	#list of all available hosts
 	'all_hosts': CLIENTS + SERVERS,
