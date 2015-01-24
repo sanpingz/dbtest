@@ -67,16 +67,18 @@ def parse_float(text):
 	return float(text)
 
 def sleep_status(sleep_time, status=True, rjust=6):
+	sleep_time = int(sleep_time)
 	if sleep_time <= 60 or not status:
 		time.sleep(sleep_time)
 	else:
 		flush_intv = 10
 		count = 0
+		time.sleep(sleep_time-sleep_time/flush_intv*flush_intv)
 		while True:
 			msg = ' '*rjust + 'sleep {0} mins, remaining: {1} seconds    '.format(sleep_time/60, sleep_time - count*flush_intv)
 			sys.stdout.write("\r{0}".format(msg))
 			sys.stdout.flush()
-			if count*flush_intv == sleep_time:
+			if count*flush_intv >= sleep_time:
 				print('')
 				break
 			time.sleep(flush_intv)
