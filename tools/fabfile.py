@@ -4,12 +4,12 @@ from fabric.contrib.console import confirm
 import re, os, json, random
 from hashlib import md5 as hash
 
-DB = env.get('db') or 'default'
-CC = env.get('cc') or 2
-SC = env.get('sc') or 4
-
 MAX_CC = 10
 MAX_SC = 24
+DB = env.get('db') or 'default'
+CC = env.get('cc') or MAX_CC
+SC = env.get('sc') or MAX_SC
+
 if env.get('pw'):
 	env.password = env.get('pw')
 
