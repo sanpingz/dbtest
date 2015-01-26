@@ -1,7 +1,7 @@
 DB Test Util
 ======
 
-DB test util to install, maintain and test NoSQL DB with YCSB
+DB test util to install, manage and test NoSQL DB with YCSB
 
 Puppet Master:
 ------------
