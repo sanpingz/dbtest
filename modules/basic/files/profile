@@ -120,7 +120,7 @@ ISPN_SERVER_HOME=/local/apps/infinispan
 [ -d $ISPN_SERVER_HOME ] && export PATH=$PATH:$ISPN_SERVER_HOME/bin
 
 ## Golang
-GOPATH=/local/repo/go
+GOPATH=/local/repo/golang
 [ -d $GOPATH ] && export GOPATH && export PATH=$PATH:$GOPATH/bin
 
 ## User Defined
