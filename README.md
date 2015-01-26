@@ -21,7 +21,7 @@ Puppet Master:
 Puppet Agent:
 ------------
 
-Required:
+*Required:*
 
 - puppet
 - JDK
