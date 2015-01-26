@@ -4,7 +4,7 @@ node default {
 		}
 }
 
-node 'base.openstacklocal' {
+node 'agent.openstacklocal' {
 	#include basic
 }
 

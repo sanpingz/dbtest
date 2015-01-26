@@ -54,21 +54,13 @@ class aerospike {
 		content => template("$service/$service.erb"),
 		notify => Service["$service"],
 	}
-#	file { "$conf_home/$service":
-#		mode => 755,
-#		owner => root,
-#		group => root,
-#		source => "$extra_home/conf/$service",
-#		purge => "true",
-#		recurse => "true",
-#	}
-#	file { "$zip_file":
+#	file { "$pkg_file":
 #		mode => 644,
 #		owner => root,
 #		group => root,
-#		path => "$dist_home/${zip_file}",
+#		path => "$dist_home/${pkg_file}",
 #		ensure => file,
-#		source => "$extra_home/files/${zip_file}",
+#		source => "$extra_home/files/${pkg_file}",
 #		notify => Exec["reinstall_$service"],
 #	}
 	service { "$service":
@@ -77,6 +69,5 @@ class aerospike {
 		hasstatus => true,
 		hasrestart => true,
 		enable => false,
-		#subscribe => File["$conf_home/$service"],
 	}
 }
