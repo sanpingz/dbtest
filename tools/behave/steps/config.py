@@ -14,7 +14,7 @@ RUN_THREADS = 100
 #LOAD_THREADS = 200
 #RUN_THREADS = 400
 SAMPLE_POINTS = 10
-REDIS_TRIB = '/local/tool/redis-trib'
+REDIS_TRIB = '/local/tools/redis-trib'
 
 PROCS = {
 	'aerospike': 'asd',
