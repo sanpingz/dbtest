@@ -14,7 +14,7 @@ def step_impl(context, target, runtime, workload):
 	# get target TPS
 	if target == '100%':
 		target = 0
-	elif 'max_tps' in context.response and target[-1] == '%':
+	elif 'response' in context and 'max_tps' in context.response and target[-1] == '%':
 		target = int(float(context.response['max_tps'])*float(target[:-1])/100)
 	else:
 		target = int(float(target))
