@@ -9,16 +9,18 @@ register_type(Float=parse_float)
 
 @then('keep "{target}" traffic running "{runtime:Integer}" mins with "{workload}"')
 def step_impl(context, target, runtime, workload):
-	assert target[-1] == '%'
+	# assert target[-1] == '%'
 	assert workload in WORKLOADS
-	config = {}
-	config.update(CONFIG)
+	# get target TPS
 	if target == '100%':
 		target = 0
-	elif 'max_tps' in context.response:
+	elif 'max_tps' in context.response and target[-1] == '%':
 		target = int(float(context.response['max_tps'])*float(target[:-1])/100)
 	else:
-		assert False
+		target = int(float(target))
+
+	config = {}
+	config.update(CONFIG)
 	config['runtime'] = runtime
 	config['runtime'] += WARMUPS[DB]
 	case = list(set(RECORD_SIZES) & context.tags)
@@ -28,6 +30,7 @@ def step_impl(context, target, runtime, workload):
 	print('running workload: {0}'.format(config['workload']))
 	config['target'] = target
 	config['mark'] = context.mark + '_' + config['workload']
+
 	print('    target TPS: {0}'.format(config['target']))
 	run_test(config)
 	print(' '*8 + 'done')
