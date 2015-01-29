@@ -4,6 +4,7 @@ class client {
 			$dist_home = '/local/dist'
 			$apps_home = '/local/apps'
 			$tools_home = '/local/tools'
+			$work_home = '/local/workshop'
 			$ycsb_pkg = 'ycsb-0.1.5.tar.gz'
 			$files_home = 'puppet:///modules/client'
 			$extra_home = 'puppet:///extra_files'
@@ -16,7 +17,15 @@ class client {
 #		ensure => file,
 #		source => "$files_home/grub.conf",
 #	}
-	file { '/local/workshop':
+	file { "$tools_home/bin":
+		mode => 755,
+		owner => root,
+		group => root,
+		source => "$files_home/bin",
+		purge => true,
+		recurse => true,
+	}
+	file { "$work_home":
 		mode => 644,
 		owner => root,
 		group => root,

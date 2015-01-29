@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+import re, os, sys
+
+def get_sum(log_file):
+	ptn = re.compile(r'\[[^C]+?\], (\d+)?[A-Za-z.]+')
+	with open(log_file) as f:
+		while True:
+			line = f.readline()
+			if not line:
+				break
+			if ptn.match(line):
+				print(line),
+
+if __name__ == '__main__':
+	if os.path.isfile(sys.argv[1]):
+		get_sum(sys.argv[1])
+		print('')
+	else:
+		print("%s is not exist" % sys.argv[1])
