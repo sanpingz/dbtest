@@ -11,4 +11,12 @@ class server {
 #		ensure => file,
 #		source => "$files_home/grub.conf",
 #	}
+	file { '/local/tools/bin':
+		mode => 755,
+		owner => root,
+		group => root,
+		source => "$files_home/bin",
+		purge => true,
+		recurse => true,
+	}
 }

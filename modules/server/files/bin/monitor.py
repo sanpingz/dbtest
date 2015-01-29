@@ -26,10 +26,24 @@ def get_process(name):
 	return procs and procs[0]
 
 def get_cpu_mem(name=None, interval=1.0):
+	ret = dict(cpu=0, mem=0)
 	if name:
 		proc = get_process(name)
-		return dict(cpu=proc.cpu_percent(interval=interval), mem=proc.memory_percent())
-	return dict(cpu=ps.cpu_percent(interval=interval), mem=ps.virtual_memory().percent)
+		if 'cpu_percent' in dir(proc):
+			ret['cpu'] = proc.cpu_percent(interval=interval)
+		elif 'get_cpu_percent' in dir(proc):
+			ret['cpu'] = proc.get_cpu_percent(interval=interval)
+		if 'memory_percent' in dir(proc):
+			ret['mem'] = proc.memory_percent()
+		elif 'get_memory_percent' in dir(proc):
+			ret['mem'] = proc.get_memory_percent()
+		return ret
+	if 'cpu_percent' in dir(ps):
+		ret['cpu'] = ps.cpu_percent(interval=interval)
+	elif 'get_cpu_percent' in dir(ps):
+		ret['cpu'] = ps.get_cpu_percent(interval=interval)
+	ret['mem'] = ps.virtual_memory().percent
+	return ret
 
 def get_disk_iostat(device=None):
 	'''
@@ -40,19 +54,27 @@ def get_disk_iostat(device=None):
 	return ps.disk_io_counters(perdisk=True).get(device)
 
 def get_disk_io(device=None, interval=1.0):
-	iostat = get_disk_iostat(device=device)
-	_read = iostat.read_bytes
-	_write= iostat.write_bytes
-	time.sleep(interval)
-	iostat = get_disk_iostat(device=device)
-	read_bytes = iostat.read_bytes - _read
-	write_bytes = iostat.write_bytes - _write
+	try:
+		iostat = get_disk_iostat(device=device)
+		_read = iostat.read_bytes
+		_write= iostat.write_bytes
+		time.sleep(interval)
+		iostat = get_disk_iostat(device=device)
+		read_bytes = iostat.read_bytes - _read
+		write_bytes = iostat.write_bytes - _write
+	except:
+		read_bytes = 0
+		write_bytes = 0
 	return dict(read=read_bytes/M/interval, write=write_bytes/M/interval)
 
 def get_net_iostat(nic=None):
 	if not nic:
+		if 'net_io_counters' in dir(ps):
+			return ps.net_io_counters(pernic=False)
 		return ps.network_io_counters(pernic=False)
-	return ps.net_io_counters(pernic=True).get(nic)
+	if 'net_io_counters' in dir(ps):
+		return ps.net_io_counters(pernic=False)
+	return ps.network_io_counters(pernic=True).get(nic)
 
 def get_net_io(nic=None, interval=1.0):
 	iostat = get_net_iostat(nic=nic)
@@ -214,6 +236,9 @@ if __name__ == '__main__':
 			help="Output format: (json, dict, table)")
 	args = parser.parse_args()
 
-	ret = monitorit(name=args.name, device=args.device, nic=args.nic, interval=args.interval, wait=args.wait, duration=int(args.duration*60), status=args.status)
+	try:
+		ret = monitorit(name=args.name, device=args.device, nic=args.nic, interval=args.interval, wait=args.wait, duration=int(args.duration*60), status=args.status)
+	except:
+		pass
 	pretty_print(ret, args.format)
 

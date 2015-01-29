@@ -15,7 +15,7 @@ if env.get('pw'):
 
 WORKSHOP = '/local/workshop/{0}'.format(DB)
 LOGS_HOME = '/local/logs/{0}'.format(DB)
-MONITOR_HOME = '/tmp/{0}'.format(DB)
+TEMP_HOME = '/tmp'
 TOOLS_HOME = '/local/tools'
 
 CLIENTS = ["{0}{1:02}".format('client',x) for x in range(1, MAX_CC+1)]
@@ -127,17 +127,9 @@ def disk_space():
 @parallel
 def monitor(mark, proc='asd', nic='eth0', device='vda2', duration=1):
 	host = run('hostname -s')
-	#log_file = 'monitor.{0}.log'.format(host)
-	#log_dir = '%s/%s' % (LOGS_HOME, mark)
-	#local_log = '%s/%s' % (log_dir, log_file)
 	with settings(hide('warnings' ,'running'), warn_only=True, combine_stderr=False):
-		run('[ ! -d {0} ] && mkdir -p {0}'.format(MONITOR_HOME))
 		#nic = 'eth1' if run('ifconfig eth0|grep 37.3.3') == '' else 'eth0'
-		with cd(MONITOR_HOME):
-			put(TOOLS_HOME + '/bin/monitor.py', MONITOR_HOME)
-			run('chmod +x {0}/monitor.py'.format(MONITOR_HOME))
-			return run('./monitor.py -p {0} -n {1} -d {2} -f {3} -u {4}'.format(proc, nic, device, 'json', duration))
-			#get(log_file, local_log)
+		return run('monitor.py -p {0} -n {1} -d {2} -f {3} -u {4}'.format(proc, nic, device, 'json', duration))
 
 @runs_once
 #@parallel
