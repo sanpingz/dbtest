@@ -285,7 +285,7 @@ def run_test(action, workload='a', runtime=10, threads=50, target=None, recordco
 	def converte(x):
 		x[0] = x[0][1:-1]
 		try:
-			x[2] = float(re.findall(r'[\d.]+', x[2])[0])
+			x[2] = float(re.findall(r'[\d.E]+', x[2])[0])
 		except Exception, e:
 			print(e)
 			print(x)
