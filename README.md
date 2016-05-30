@@ -1,7 +1,7 @@
-DB Test Util
+DBTest
 ======
 
-DB test util to install, manage and test NoSQL DB with YCSB
+Distribute databse testing tool set to install, manage and test NoSQL database with YCSB.
 
 Puppet Master:
 ------------
